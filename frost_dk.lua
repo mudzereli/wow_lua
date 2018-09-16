@@ -14,82 +14,95 @@
 
   local Everyone = HR.Commons.Everyone;
   local DeathKnight = HR.Commons.DeathKnight;
+  local Settings = nil;
+  local I = nil;
+  local S = nil;
 
-  -- Spells
-  if not Spell.DeathKnight then Spell.DeathKnight = {}; end
-  Spell.DeathKnight.Frost = {
-    -- Racials
-    ArcaneTorrent                 = Spell(50613),
-    Berserking                    = Spell(26297),
-    BloodFury                     = Spell(20572),
-    GiftoftheNaaru                = Spell(59547),
+  local function Initialize()
+    if not HL then HL = HeroLib end
+    if not Cache then Cache = HeroCache end
+    if not Unit then Unit = HL.Unit end
+    if not Player then Player = Unit.Player end
+    if not Target then Target = Unit.Target end
+    if not Spell then Spell = HL.Spell end
+    if not Item then Item = HL.Item end
+    if not HR then HR = HeroRotation end
 
-    -- Abilities
-    ChainsOfIce                   = Spell(45524),
-    EmpowerRuneWeapon             = Spell(47568),
-    FrostFever                    = Spell(55095),
-    FrostStrike                   = Spell(49143),
-    HowlingBlast                  = Spell(49184),
-    Obliterate                    = Spell(49020),
-    PillarOfFrost                 = Spell(51271),
-    RazorIce                      = Spell(51714),
-    RemorselessWinter             = Spell(196770),
-    KillingMachine                = Spell(51124),
-    Rime                          = Spell(59052),
-    UnholyStrength                = Spell(53365),
-    -- Talents
-    BreathofSindragosa            = Spell(152279),
-    BreathofSindragosaTicking     = Spell(155166),
-    FrostScythe                   = Spell(207230),
-    FrozenPulse                   = Spell(194909),
-    GatheringStorm                = Spell(194912),
-    GatheringStormBuff            = Spell(211805),
-    GlacialAdvance                = Spell(194913),
-    HornOfWinter                  = Spell(57330),
-    IcyTalons                     = Spell(194878),
-    IcyTalonsBuff                 = Spell(194879),
-    MurderousEfficiency           = Spell(207061),
-    Obliteration                  = Spell(281238),
-    RunicAttenuation              = Spell(207104),
-    Icecap                        = Spell(207126),
-    ColdHeart                     = Spell(281208),
-    ColdHeartBuff                 = Spell(281209),
-    FrostwyrmsFury                = Spell(279302),
-    -- Defensive
-    AntiMagicShell                = Spell(48707),
-    DeathStrike                   = Spell(49998),
-    IceboundFortitude             = Spell(48792),
-    -- Utility
-    ControlUndead                 = Spell(45524),
-    DeathGrip                     = Spell(49576),
-    MindFreeze                    = Spell(47528),
-    PathOfFrost                   = Spell(3714),
-    WraithWalk                    = Spell(212552),
-    -- Misc
-    PoolRange                   = Spell(9999000010)
-    -- Macros
-  };
-  local S = Spell.DeathKnight.Frost;
+    -- Spells
+    if not Spell.DeathKnight then Spell.DeathKnight = {}; end
+    Spell.DeathKnight.Frost = {
+      -- Racials
+      ArcaneTorrent                 = Spell(50613),
+      Berserking                    = Spell(26297),
+      BloodFury                     = Spell(20572),
+      GiftoftheNaaru                = Spell(59547),
 
-  -- Items
-  if not Item.DeathKnight then Item.DeathKnight = {}; end
-  Item.DeathKnight.Frost = {
-    -- Legendaries
-    --Trinkets
-    --Potion
-    BattlePotionOfStrength = Item(163224)
-  };
-  local I = Item.DeathKnight.Frost;
+      -- Abilities
+      ChainsOfIce                   = Spell(45524),
+      EmpowerRuneWeapon             = Spell(47568),
+      FrostFever                    = Spell(55095),
+      FrostStrike                   = Spell(49143),
+      HowlingBlast                  = Spell(49184),
+      Obliterate                    = Spell(49020),
+      PillarOfFrost                 = Spell(51271),
+      RazorIce                      = Spell(51714),
+      RemorselessWinter             = Spell(196770),
+      KillingMachine                = Spell(51124),
+      Rime                          = Spell(59052),
+      UnholyStrength                = Spell(53365),
+      -- Talents
+      BreathofSindragosa            = Spell(152279),
+      BreathofSindragosaTicking     = Spell(155166),
+      FrostScythe                   = Spell(207230),
+      FrozenPulse                   = Spell(194909),
+      GatheringStorm                = Spell(194912),
+      GatheringStormBuff            = Spell(211805),
+      GlacialAdvance                = Spell(194913),
+      HornOfWinter                  = Spell(57330),
+      IcyTalons                     = Spell(194878),
+      IcyTalonsBuff                 = Spell(194879),
+      MurderousEfficiency           = Spell(207061),
+      Obliteration                  = Spell(281238),
+      RunicAttenuation              = Spell(207104),
+      Icecap                        = Spell(207126),
+      ColdHeart                     = Spell(281208),
+      ColdHeartBuff                 = Spell(281209),
+      FrostwyrmsFury                = Spell(279302),
+      -- Defensive
+      AntiMagicShell                = Spell(48707),
+      DeathStrike                   = Spell(49998),
+      IceboundFortitude             = Spell(48792),
+      -- Utility
+      ControlUndead                 = Spell(45524),
+      DeathGrip                     = Spell(49576),
+      MindFreeze                    = Spell(47528),
+      PathOfFrost                   = Spell(3714),
+      WraithWalk                    = Spell(212552),
+      -- Misc
+      PoolRange                   = Spell(9999000010)
+      -- Macros
+    };
+    S = Spell.DeathKnight.Frost;
 
-  -- GUI Settings
-  local Settings = {
-    General = HR.GUISettings.General,
-    DeathKnight = HR.GUISettings.APL.DeathKnight
-  };
+    -- Items
+    if not Item.DeathKnight then Item.DeathKnight = {}; end
+    Item.DeathKnight.Frost = {
+      BattlePotionOfStrength = Item(163224)
+    };
+    I = Item.DeathKnight.Frost;
+
+    -- GUI Settings
+    if not Settings then
+      Settings = {
+        General = HR.GUISettings.General,
+        DeathKnight = HR.GUISettings.APL.DeathKnight
+      };
+    end
+  end
 
 --- ========== HELPER FUNCTIONS ==========
 
-  local function should_death_strike()
+  local function ShouldDeathStrike()
     return (Settings.General.SoloMode and Player:HealthPercentage() < Settings.DeathKnight.Commons.UseDeathStrikeHP) and true or false;
   end
 
@@ -207,7 +220,7 @@
     -- frost_strike,if=cooldown.remorseless_winter.remains<=2*gcd&talent.gathering_storm.enabled
     -- cb4a28f5-821e-4fde-9707-3a3450c2e151
     if S.FrostStrike:IsReady("Melee") 
-      and (not should_death_strike())
+      and (not ShouldDeathStrike())
       and S.RemorselessWinter:CooldownRemains() <= 2 * Player:GCD() 
       and talent_enabled("Gathering Storm") then
 
@@ -235,7 +248,7 @@
     -- frost_strike,if=runic_power.deficit<(15+talent.runic_attenuation.enabled*3)
     -- 2d3a06a3-0e05-4cd9-a9c1-b31cf70b4c06
     if S.FrostStrike:IsReady("Melee") 
-      and (not should_death_strike())
+      and (not ShouldDeathStrike())
       and Player:RunicPowerDeficit() < (15 + (binarize(talent_enabled("Runic Attenuation")) * 3)) then
 
       return "frost_strike [2d3a06a3-0e05-4cd9-a9c1-b31cf70b4c06]"
@@ -263,7 +276,7 @@
     -- frost_strike
     -- 76ce6df2-d174-4045-9a2b-9b19939b64a5
     if S.FrostStrike:IsReady("Melee")
-      and (not should_death_strike()) then
+      and (not ShouldDeathStrike()) then
 
       return "frost_strike [76ce6df2-d174-4045-9a2b-9b19939b64a5]"
     end
@@ -306,7 +319,7 @@
     -- frost_strike,if=cooldown.remorseless_winter.remains<=2*gcd&talent.gathering_storm.enabled
     -- 25ba261e-8b2c-41a3-a0a0-24cb4b6c2063
     if S.FrostStrike:IsReady("Melee") 
-      and (not should_death_strike())
+      and (not ShouldDeathStrike())
       and S.RemorselessWinter:CooldownRemains() <= 2 * Player:GCD() 
       and talent_enabled("Gathering Storm") then
 
@@ -344,7 +357,7 @@
     -- frost_strike,if=runic_power.deficit<(15+talent.runic_attenuation.enabled*3)
     -- 04798d52-1baa-4eb0-ac01-955a1426d8ae
     if S.FrostStrike:IsReady("Melee") 
-      and (not should_death_strike())
+      and (not ShouldDeathStrike())
       and Player:RunicPowerDeficit() < (15 + (binarize(talent_enabled("Runic Attenuation")) * 3)) then
 
       return "frost_strike [04798d52-1baa-4eb0-ac01-955a1426d8ae]"
@@ -385,7 +398,7 @@
     -- frost_strike
     -- f8d87eba-5bb4-4382-a9dd-ff1a98edb38e
     if S.FrostStrike:IsReady("Melee")
-      and (not should_death_strike()) then
+      and (not ShouldDeathStrike()) then
 
       return "frost_strike [f8d87eba-5bb4-4382-a9dd-ff1a98edb38e]"
     end
@@ -440,7 +453,7 @@
     -- frost_strike,if=runic_power.deficit<20&cooldown.pillar_of_frost.remains>rune.time_to_4
     -- bfbb82a5-54b6-4c4c-9ec5-9112d1af7da8
     if S.FrostStrike:IsReady("Melee") 
-      and (not should_death_strike())
+      and (not ShouldDeathStrike())
       and Player:RunicPowerDeficit() < 20
       and S.PillarOfFrost:CooldownRemains() > Player:RuneTimeToX(4) then
 
@@ -492,7 +505,7 @@
     -- frost_strike,if=cooldown.pillar_of_frost.remains>rune.time_to_4&runic_power.deficit<40
     -- 1094aa7b-3694-4e7c-a0f3-f8e08aa0fdc0
     if S.FrostStrike:IsReady("Melee") 
-      and (not should_death_strike())
+      and (not ShouldDeathStrike())
       and S.PillarOfFrost:CooldownRemains() > Player:RuneTimeToX(4) 
       and Player:RunicPowerDeficit() < 40 then
 
@@ -660,7 +673,7 @@
     -- frost_strike,if=!buff.rime.up|runic_power.deficit<10|rune.time_to_2>gcd
     -- e4a5e42a-67a0-44c5-9eab-acaef30a67d1
     if S.FrostStrike:IsReady("Melee") 
-      and (not should_death_strike())
+      and (not ShouldDeathStrike())
       and (not Player:Buff(S.Rime)
         or Player:RunicPowerDeficit() < 10 
         or Player:RuneTimeToX(2) > Player:GCD()) then
@@ -795,6 +808,11 @@
   end
 
   function FrostDK_APL()
+    if (not S) or (not I) or (not Settings) or (not HR) then
+      Initialize()
+      return nil
+    end
+
     -- UPDATE UNITS
     HL.GetEnemies("Melee");
     HL.GetEnemies(8,true);  -- Frostscythe 8yd
@@ -816,7 +834,7 @@
     if Everyone.TargetIsValid() then
       -- Death Strike Heal
       -- ff10ee71-e294-46c0-8c39-f5212edb6ea7
-      if should_death_strike() and S.DeathStrike:IsReady("Melee") then
+      if ShouldDeathStrike() and S.DeathStrike:IsReady("Melee") then
           return "death_strike [ff10ee71-e294-46c0-8c39-f5212edb6ea7]"
       end
 
@@ -852,7 +870,7 @@
       -- 44792852-fba8-4935-b547-27541897bf73
       -- added extra code to handle CD variables
       if S.FrostStrike:IsReady("Melee") 
-        and (not should_death_strike())
+        and (not ShouldDeathStrike())
         and Player:BuffRemains(S.IcyTalonsBuff) <= Player:GCD() 
         and Player:Buff(S.IcyTalonsBuff) 
         and ((not talent_enabled("Breath of Sindragosa")) 
