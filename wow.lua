@@ -1,5 +1,6 @@
 WH_UPDATE_NUMBER = 201808262018
 
+WH_DO_INTERRUPT = true
 WH_DPS_AVERAGE_PERSON = 8000
 
 WH_INTERRUPT_TABLE = {}
@@ -174,6 +175,9 @@ function should_interrupt(unit)
     local _castingSpellName = UnitCastingInfo(unit)
     local _channelingSpellName = UnitChannelInfo(unit)
     local _do_interrupt = false
+    if not WH_DO_INTERRUPT then return false end
+    if _unitName == nil then return false end
+    if _castingSpellName == nil and _channelingSpellName == nil then return false end
     for u, s in pairs(WH_INTERRUPT_TABLE) do
         if(_unitName == u and (_castingSpellName == s or _channelingSpellName == s)) then
             _do_interrupt = true
