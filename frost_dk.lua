@@ -27,6 +27,8 @@
     if not Spell then Spell = HL.Spell end
     if not Item then Item = HL.Item end
     if not HR then HR = HeroRotation end
+    if not Everyone then Everyone = HR.Commons.Everyone end
+    if not DeathKnight then DeathKnight = HR.Commons.DeathKnight end
 
     -- Spells
     if not Spell.DeathKnight then Spell.DeathKnight = {}; end
@@ -92,7 +94,7 @@
     I = Item.DeathKnight.Frost;
 
     -- GUI Settings
-    if not Settings then
+    if (not Settings) or (not Settings.DeathKnight) then
       Settings = {
         General = HR.GUISettings.General,
         DeathKnight = HR.GUISettings.APL.DeathKnight
@@ -808,7 +810,7 @@
   end
 
   function FrostDK_APL()
-    if (not S) or (not I) or (not Settings) or (not HR) then
+    if (not S) or (not I) or (not Settings) or (not HR) or (not HL) or (not Cache) or (not Unit) or (not Player) or (not Target) or (not Spell) or (not Item) or (not HR) or (not Everyone) or (not DeathKnight) or (not Settings.DeathKnight) then
       Initialize()
       return nil
     end
