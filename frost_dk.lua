@@ -1,5 +1,10 @@
---- ========== HEADER ==========
+--- ========== TODO ==========
 
+  -- pooling only variable
+  
+--- ========== HEADER ==========
+  
+  local FILE_VERSION = 20180917
   local addonName, addonTable = ...;
   local HL = HeroLib;
   local Cache = HeroCache;
