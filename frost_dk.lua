@@ -4,24 +4,27 @@
   
 --- ========== HEADER ==========
   
-  local FILE_VERSION = 20180917
-  local addonName, addonTable = ...;
-  local HL = HeroLib;
-  local Cache = HeroCache;
-  local Unit = HL.Unit;
-  local Player = Unit.Player;
-  local Target = Unit.Target;
-  local Spell = HL.Spell;
-  local Item = HL.Item;
-  local HR = HeroRotation;
+  local FILE_VERSION = 20180917-3
+
+  WH_FROST_DK_POOLING_FREEZE = false
+
+  local addonName, addonTable = ...
+  local HL = HeroLib
+  local Cache = HeroCache
+  local Unit = HL.Unit
+  local Player = Unit.Player
+  local Target = Unit.Target
+  local Spell = HL.Spell
+  local Item = HL.Item
+  local HR = HeroRotation
 
 --- ========== LOCAL VARIABLES ==========
 
-  local Everyone = HR.Commons.Everyone;
-  local DeathKnight = HR.Commons.DeathKnight;
-  local Settings = nil;
-  local I = nil;
-  local S = nil;
+  local Everyone = HR.Commons.Everyone
+  local DeathKnight = HR.Commons.DeathKnight
+  local Settings = nil
+  local I = nil
+  local S = nil
 
   local function Initialize()
     if not HL then HL = HeroLib end
@@ -36,7 +39,7 @@
     if not DeathKnight then DeathKnight = HR.Commons.DeathKnight end
 
     -- Spells
-    if not Spell.DeathKnight then Spell.DeathKnight = {}; end
+    if not Spell.DeathKnight then Spell.DeathKnight = {} end
     Spell.DeathKnight.Frost = {
       -- Racials
       ArcaneTorrent                 = Spell(50613),
@@ -88,29 +91,29 @@
       -- Misc
       PoolRange                   = Spell(9999000010)
       -- Macros
-    };
-    S = Spell.DeathKnight.Frost;
+    }
+    S = Spell.DeathKnight.Frost
 
     -- Items
-    if not Item.DeathKnight then Item.DeathKnight = {}; end
+    if not Item.DeathKnight then Item.DeathKnight = {} end
     Item.DeathKnight.Frost = {
       BattlePotionOfStrength = Item(163224)
-    };
-    I = Item.DeathKnight.Frost;
+    }
+    I = Item.DeathKnight.Frost
 
     -- GUI Settings
     if (not Settings) or (not Settings.DeathKnight) then
       Settings = {
         General = HR.GUISettings.General,
         DeathKnight = HR.GUISettings.APL.DeathKnight
-      };
+      }
     end
   end
 
 --- ========== HELPER FUNCTIONS ==========
 
   local function ShouldDeathStrike()
-    return (Settings.General.SoloMode and Player:HealthPercentage() < Settings.DeathKnight.Commons.UseDeathStrikeHP) and true or false;
+    return (Settings.General.SoloMode and Player:HealthPercentage() < Settings.DeathKnight.Commons.UseDeathStrikeHP) and true or false
   end
 
 --- ========== SIMCRAFT PRIORITY LIST ==========
@@ -217,7 +220,7 @@
 
 --- ========== CONVERTED ACTION LIST ==========
 
-  local function Simcraft_Standard()
+  local function simc_standard()
     -- remorseless_winter
     -- 40dd79f0-f639-4512-a3e7-3c1a11f4c7f8
     if S.RemorselessWinter:IsCastable() then
@@ -227,6 +230,7 @@
     -- frost_strike,if=cooldown.remorseless_winter.remains<=2*gcd&talent.gathering_storm.enabled
     -- cb4a28f5-821e-4fde-9707-3a3450c2e151
     if S.FrostStrike:IsReady("Melee") 
+      and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and S.RemorselessWinter:CooldownRemains() <= 2 * Player:GCD() 
       and talent_enabled("Gathering Storm") then
@@ -236,8 +240,8 @@
 
     -- howling_blast,if=buff.rime.up
     -- 8da88256-bedd-409b-87dc-5f27b05220fa
-    if S.HowlingBlast:IsCastable(30, true) 
-      and S.HowlingBlast:IsReady(30) 
+    if S.HowlingBlast:IsReady(30) 
+      and Everyone.TargetIsValid()
       and Player:Buff(S.Rime) then
 
       return "howling_blast [8da88256-bedd-409b-87dc-5f27b05220fa]"
@@ -246,6 +250,7 @@
     -- obliterate,if=!buff.frozen_pulse.up&talent.frozen_pulse.enabled
     -- aa354962-0e9b-4dd5-be84-f296d214da2e
     if S.Obliterate:IsCastable("Melee") 
+      and Everyone.TargetIsValid()
       and talent_enabled("Frozen Pulse")
       and (not Player:Buff(S.FrozenPulse)) then
 
@@ -255,6 +260,7 @@
     -- frost_strike,if=runic_power.deficit<(15+talent.runic_attenuation.enabled*3)
     -- 2d3a06a3-0e05-4cd9-a9c1-b31cf70b4c06
     if S.FrostStrike:IsReady("Melee") 
+      and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and Player:RunicPowerDeficit() < (15 + (binarize(talent_enabled("Runic Attenuation")) * 3)) then
 
@@ -264,6 +270,7 @@
     -- frostscythe,if=buff.killing_machine.up&rune.time_to_4>=gcd
     -- 5d131514-44a8-4dcc-bdc2-52f7dd304c8c
     if talent_enabled("Frostscythe")
+      and Everyone.TargetIsValid()
       and S.FrostScythe:IsCastable() 
       and Target:IsInRange(8)
       and Player:Buff(S.KillingMachine)
@@ -275,6 +282,7 @@
     -- obliterate,if=runic_power.deficit>(25+talent.runic_attenuation.enabled*3)
     -- 4025c58f-8fa1-41db-931a-be45cb397cbe
     if S.Obliterate:IsCastable("Melee") 
+      and Everyone.TargetIsValid()
       and Player:RunicPowerDeficit() > (25 + (binarize(talent_enabled("Runic Attenuation")) * 3)) then
 
       return "obliterate [4025c58f-8fa1-41db-931a-be45cb397cbe]"
@@ -283,6 +291,7 @@
     -- frost_strike
     -- 76ce6df2-d174-4045-9a2b-9b19939b64a5
     if S.FrostStrike:IsReady("Melee")
+      and Everyone.TargetIsValid()
       and (not ShouldDeathStrike()) then
 
       return "frost_strike [76ce6df2-d174-4045-9a2b-9b19939b64a5]"
@@ -296,15 +305,10 @@
       return "horn_of_winter [d76f9ff0-804b-41fa-8e81-b67289e6f200]"
     end
 
-    -- arcane_torrent
-    -- if S.ArcaneTorrent:IsCastable() and HR.CDsON() then
-    --   return ""
-    -- end
-
-    return false;
+    return false
   end
 
-  local function Simcraft_AOE()
+  local function simc_aoe()
 
     -- remorseless_winter,if=talent.gathering_storm.enabled
     -- d5373287-0c90-4bbe-8a47-9a77a3efda35
@@ -317,6 +321,7 @@
     -- glacial_advance,if=talent.frostscythe.enabled
     -- 8e457ad4-2950-43a0-948a-f6ac6f9636c9
     if talent_enabled("Glacial Advance")
+      and Everyone.TargetIsValid()
       and S.GlacialAdvance:IsCastable()
       and talent_enabled("Frostscythe") then
 
@@ -326,6 +331,7 @@
     -- frost_strike,if=cooldown.remorseless_winter.remains<=2*gcd&talent.gathering_storm.enabled
     -- 25ba261e-8b2c-41a3-a0a0-24cb4b6c2063
     if S.FrostStrike:IsReady("Melee") 
+      and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and S.RemorselessWinter:CooldownRemains() <= 2 * Player:GCD() 
       and talent_enabled("Gathering Storm") then
@@ -335,8 +341,8 @@
 
     -- howling_blast,if=buff.rime.up
     -- a0ba5a18-9123-4ac3-b287-f309828e3633
-    if S.HowlingBlast:IsCastable(30, true) 
-      and S.HowlingBlast:IsReady(30) 
+    if S.HowlingBlast:IsReady(30)
+      and Everyone.TargetIsValid() 
       and Player:Buff(S.Rime) then
 
       return "howling_blast [a0ba5a18-9123-4ac3-b287-f309828e3633]"
@@ -345,6 +351,7 @@
     -- frostscythe,if=buff.killing_machine.up
     -- e6cfddb1-f0b7-4449-8ca4-c082d5ca9cb7
     if talent_enabled("Frostscythe")
+      and Everyone.TargetIsValid()
       and S.FrostScythe:IsCastable() 
       and Target:IsInRange(8)
       and Player:Buff(S.KillingMachine) then
@@ -355,6 +362,7 @@
     -- glacial_advance,if=runic_power.deficit<(15+talent.runic_attenuation.enabled*3)
     -- 83d5fbb7-7cb5-4c1b-80e0-0cd9ae8f57d0
     if talent_enabled("Glacial Advance")
+      and Everyone.TargetIsValid()
       and S.GlacialAdvance:IsCastable() 
       and Player:RunicPowerDeficit() < (15 + (binarize(talent_enabled("Runic Attenuation")) * 3)) then
 
@@ -364,6 +372,7 @@
     -- frost_strike,if=runic_power.deficit<(15+talent.runic_attenuation.enabled*3)
     -- 04798d52-1baa-4eb0-ac01-955a1426d8ae
     if S.FrostStrike:IsReady("Melee") 
+      and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and Player:RunicPowerDeficit() < (15 + (binarize(talent_enabled("Runic Attenuation")) * 3)) then
 
@@ -380,6 +389,7 @@
     -- frostscythe
     -- 37a34895-c86a-463c-878f-e35bc98ff76f
     if talent_enabled("Frostscythe")
+      and Everyone.TargetIsValid()
       and S.FrostScythe:IsCastable() 
       and Target:IsInRange(8) then
 
@@ -389,6 +399,7 @@
     -- obliterate,if=runic_power.deficit>(25+talent.runic_attenuation.enabled*3)
     -- d256067c-9194-43fe-a8c0-69896d992187
     if S.Obliterate:IsCastable("Melee") 
+      and Everyone.TargetIsValid()
       and Player:RunicPowerDeficit() < (15 + (binarize(talent_enabled("Runic Attenuation")) * 3)) then
 
       return "obliterate [d256067c-9194-43fe-a8c0-69896d992187]"
@@ -397,6 +408,7 @@
     -- glacial_advance
     -- 304b52cf-94dc-4524-bb8c-6062a5d6eb22
     if talent_enabled("Glacial Advance")
+      and Everyone.TargetIsValid()
       and S.GlacialAdvance:IsCastable() then
 
       return "glacial_advance [304b52cf-94dc-4524-bb8c-6062a5d6eb22]"
@@ -405,6 +417,7 @@
     -- frost_strike
     -- f8d87eba-5bb4-4382-a9dd-ff1a98edb38e
     if S.FrostStrike:IsReady("Melee")
+      and Everyone.TargetIsValid()
       and (not ShouldDeathStrike()) then
 
       return "frost_strike [f8d87eba-5bb4-4382-a9dd-ff1a98edb38e]"
@@ -418,20 +431,15 @@
       return "horn_of_winter [6e4380d2-4063-48c5-b0a0-a8333858b349]"
     end
 
-    -- arcane_torrent
-    -- if S.ArcaneTorrent:IsCastable() and HR.CDsON() then
-    --   return ""
-    -- end
-
-    return false;
+    return false
   end
 
-  local function Simcraft_BoS_Pooling()
+  local function simc_bos_pooling()
 
     -- howling_blast,if=buff.rime.up
     -- acc12d67-ec75-490d-a72f-cfec17ea3232
-    if S.HowlingBlast:IsCastable(30, true) 
-      and S.HowlingBlast:IsReady(30) 
+    if S.HowlingBlast:IsReady(30) 
+      and Everyone.TargetIsValid()      
       and Player:Buff(S.Rime) then
 
       return "howling_blast [acc12d67-ec75-490d-a72f-cfec17ea3232]"
@@ -440,6 +448,7 @@
     -- obliterate,if=rune.time_to_4<gcd&runic_power.deficit>=25
     -- 51395f1a-afe8-4df7-9183-cc747b948f20
     if S.Obliterate:IsCastable("Melee") 
+      and Everyone.TargetIsValid()
       and Player:RuneTimeToX(4) < Player:GCD() 
       and Player:RunicPowerDeficit() >= 25 then
 
@@ -449,6 +458,7 @@
     -- glacial_advance,if=runic_power.deficit<20&cooldown.pillar_of_frost.remains>rune.time_to_4&spell_targets.glacial_advance>=2
     -- bae35292-9201-4381-a0b5-6eacfcc2deff
     if talent_enabled("Glacial Advance")
+      and Everyone.TargetIsValid()
       and S.GlacialAdvance:IsCastable() 
       and Player:RunicPowerDeficit() < 20 
       and S.PillarOfFrost:CooldownRemains() > Player:RuneTimeToX(4)
@@ -460,6 +470,7 @@
     -- frost_strike,if=runic_power.deficit<20&cooldown.pillar_of_frost.remains>rune.time_to_4
     -- bfbb82a5-54b6-4c4c-9ec5-9112d1af7da8
     if S.FrostStrike:IsReady("Melee") 
+      and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and Player:RunicPowerDeficit() < 20
       and S.PillarOfFrost:CooldownRemains() > Player:RuneTimeToX(4) then
@@ -470,6 +481,7 @@
     -- frostscythe,if=buff.killing_machine.up&runic_power.deficit>(15+talent.runic_attenuation.enabled*3)&spell_targets.frostscythe>=2
     -- bb9d1f32-fc9e-4a9d-83fe-baf531779878
     if talent_enabled("Frostscythe")
+      and Everyone.TargetIsValid()
       and S.FrostScythe:IsCastable() 
       and Target:IsInRange(8)
       and Player:Buff(S.KillingMachine) 
@@ -482,6 +494,7 @@
     -- frostscythe,if=runic_power.deficit>=(35+talent.runic_attenuation.enabled*3)&spell_targets.frostscythe>=2
     -- 102115ba-6c9c-4676-998b-e9dcaaf2677c
     if talent_enabled("Frostscythe")
+      and Everyone.TargetIsValid()
       and S.FrostScythe:IsCastable() 
       and Target:IsInRange(8)
       and Player:RunicPowerDeficit() > (35 + (binarize(talent_enabled("Runic Attenuation")) * 3))
@@ -493,6 +506,7 @@
     -- obliterate,if=runic_power.deficit>=(35+talent.runic_attenuation.enabled*3)
     -- bbada2fd-bba2-44e2-bbaa-a0d37f45ce71
     if S.Obliterate:IsCastable("Melee") 
+      and Everyone.TargetIsValid()
       and Player:RunicPowerDeficit() >= (35 + (binarize(talent_enabled("Runic Attenuation")) * 3)) then
 
       return "obliterate [bbada2fd-bba2-44e2-bbaa-a0d37f45ce71]"
@@ -501,6 +515,7 @@
     -- glacial_advance,if=cooldown.pillar_of_frost.remains>rune.time_to_4&runic_power.deficit<40&spell_targets.glacial_advance>=2
     -- bdee777f-5bc7-415d-b9fa-a74014541778
     if talent_enabled("Glacial Advance")
+      and Everyone.TargetIsValid()
       and S.GlacialAdvance:IsCastable() 
       and S.PillarOfFrost:CooldownRemains() > Player:RuneTimeToX(4) 
       and Player:RunicPowerDeficit() < 40 
@@ -512,6 +527,7 @@
     -- frost_strike,if=cooldown.pillar_of_frost.remains>rune.time_to_4&runic_power.deficit<40
     -- 1094aa7b-3694-4e7c-a0f3-f8e08aa0fdc0
     if S.FrostStrike:IsReady("Melee") 
+      and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and S.PillarOfFrost:CooldownRemains() > Player:RuneTimeToX(4) 
       and Player:RunicPowerDeficit() < 40 then
@@ -519,14 +535,26 @@
       return "frost_strike [1094aa7b-3694-4e7c-a0f3-f8e08aa0fdc0]"
     end
 
-    return false;
+    if WH_FROST_DK_POOLING_FREEZE 
+      and (not HR.CDsON())
+      and (Player:Runes() >= 3
+        or Player:RunicPowerDeficit() < 25) then
+
+      --actions+=/call_action_list,name=standard
+      ShouldReturn = simc_standard()
+      if ShouldReturn then return ShouldReturn end
+    
+    end
+
+    return false
   end
 
-  local function Simcraft_BoS_Ticking()
+  local function simc_bos_ticking()
 
     -- obliterate,if=runic_power<=30
     -- 516a4de0-cb97-4d8b-8e00-8833f4fb3802
     if S.Obliterate:IsCastable("Melee") 
+      and Everyone.TargetIsValid()
       and Player:RunicPower() <= 30 then
 
       return "obliterate [516a4de0-cb97-4d8b-8e00-8833f4fb3802]"
@@ -542,8 +570,8 @@
 
     -- howling_blast,if=buff.rime.up
     -- 983aab94-6eca-4720-8119-7f6315afef67
-    if S.HowlingBlast:IsCastable(30, true) 
-      and S.HowlingBlast:IsReady(30) 
+    if S.HowlingBlast:IsReady(30) 
+      and Everyone.TargetIsValid()
       and Player:Buff(S.Rime) then
 
       return "howling_blast [983aab94-6eca-4720-8119-7f6315afef67]"
@@ -552,6 +580,7 @@
     -- obliterate,if=rune.time_to_5<gcd|runic_power<=45
     -- c245b14a-c217-4e29-84a3-174755c4f724
     if S.Obliterate:IsCastable("Melee") 
+      and Everyone.TargetIsValid()
       and (Player:RuneTimeToX(5) < Player:GCD() 
         or Player:RunicPower() <= 45) then
 
@@ -561,6 +590,7 @@
     -- frostscythe,if=buff.killing_machine.up&spell_targets.frostscythe>=2
     -- 8544b2c9-4175-4614-abd6-8e981bec5971
     if talent_enabled("Frostscythe")
+      and Everyone.TargetIsValid()
       and S.FrostScythe:IsCastable() 
       and Target:IsInRange(8)
       and Player:Buff(S.KillingMachine) 
@@ -588,6 +618,7 @@
     -- frostscythe,if=spell_targets.frostscythe>=2
     -- 891b8011-1482-4873-8da4-6a49f1302f17
     if talent_enabled("Frostscythe")
+      and Everyone.TargetIsValid()
       and S.FrostScythe:IsCastable() 
       and Target:IsInRange(8)
       and Cache.EnemiesCount[8] >= 2 then
@@ -598,21 +629,17 @@
     -- obliterate,if=runic_power.deficit>25|rune>3
     -- c2998ae7-9a96-4f1c-a81d-0f1e36b47122
     if S.Obliterate:IsCastable("Melee") 
+      and Everyone.TargetIsValid()
       and (Player:RunicPowerDeficit() > 25 
         or Player:Runes() > 3) then
 
       return "obliterate [c2998ae7-9a96-4f1c-a81d-0f1e36b47122]"
     end
-
-    -- arcane_torrent,if=runic_power.deficit>20
-    -- if S.ArcaneTorrent:IsCastable() and HR.CDsON() and (Player:RunicPowerDeficit() > 20) then
-    --   return ""
-    -- end
     
-    return false;
+    return false
   end
 
-  local function Simcraft_Obliteration()
+  local function simc_obliteration()
 
     -- remorseless_winter,if=talent.gathering_storm.enabled
     -- 633ff471-d73c-4ac3-9eb0-d83cb0495498
@@ -625,6 +652,7 @@
     -- obliterate,if=!talent.frostscythe.enabled&!buff.rime.up&spell_targets.howling_blast>=3
     -- 8072b18a-e829-4991-aad8-5d6eca9ec7c8
     if S.Obliterate:IsCastable("Melee") 
+      and Everyone.TargetIsValid()
       and (not talent_enabled("Frostscythe"))
       and (not Player:Buff(S.Rime))
       and Cache.EnemiesCount[10] >= 3 then
@@ -635,6 +663,7 @@
     -- frostscythe,if=(buff.killing_machine.react|(buff.killing_machine.up&(prev_gcd.1.frost_strike|prev_gcd.1.howling_blast|prev_gcd.1.glacial_advance)))&spell_targets.frostscythe>=2
     -- 20c9d4b5-b7f0-4e6c-bae4-dfb143100157
     if talent_enabled("Frostscythe")
+      and Everyone.TargetIsValid()
       and S.FrostScythe:IsCastable() 
       and Target:IsInRange(8)
       and Cache.EnemiesCount[8] >= 2
@@ -648,6 +677,7 @@
     -- obliterate,if=buff.killing_machine.react|(buff.killing_machine.up&(prev_gcd.1.frost_strike|prev_gcd.1.howling_blast|prev_gcd.1.glacial_advance))
     -- 2411d6cd-8b10-4e82-b3fb-d53fc82e5df0
     if S.Obliterate:IsCastable("Melee") 
+      and Everyone.TargetIsValid()
       and (Player:Buff(S.KillingMachine)
         or (Player:Buff(S.KillingMachine)
           and (Player:PrevGCDP(1, S.FrostStrike) or Player:PrevGCDP(1, S.HowlingBlast) or Player:PrevGCDP(1, S.GlacialAdvance)))) then
@@ -658,6 +688,7 @@
     -- glacial_advance,if=(!buff.rime.up|runic_power.deficit<10|rune.time_to_2>gcd)&spell_targets.glacial_advance>=2
     -- 0bd8c100-fdf0-4713-bec2-582c20d62693
     if talent_enabled("Glacial Advance")
+      and Everyone.TargetIsValid()
       and S.GlacialAdvance:IsCastable()
       and Cache.EnemiesCount[30] >= 2
       and ((not Player:Buff(S.Rime)) 
@@ -669,8 +700,8 @@
 
     -- howling_blast,if=buff.rime.up&spell_targets.howling_blast>=2
     -- 9d5b330d-5ebb-4efa-892f-7bab235f215d
-    if S.HowlingBlast:IsCastable(30, true) 
-      and S.HowlingBlast:IsReady(30) 
+    if S.HowlingBlast:IsReady(30) 
+      and Everyone.TargetIsValid()
       and Player:Buff(S.Rime) 
       and Cache.EnemiesCount[10] >= 2 then
 
@@ -680,6 +711,7 @@
     -- frost_strike,if=!buff.rime.up|runic_power.deficit<10|rune.time_to_2>gcd
     -- e4a5e42a-67a0-44c5-9eab-acaef30a67d1
     if S.FrostStrike:IsReady("Melee") 
+      and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and (not Player:Buff(S.Rime)
         or Player:RunicPowerDeficit() < 10 
@@ -690,8 +722,8 @@
 
     -- howling_blast,if=buff.rime.up
     -- 56ca4327-20bd-4911-839d-56bb316eb2fd
-    if S.HowlingBlast:IsCastable(30, true) 
-      and S.HowlingBlast:IsReady(30) 
+    if S.HowlingBlast:IsReady(30) 
+      and Everyone.TargetIsValid()
       and Player:Buff(S.Rime) then
 
       return "howling_blast [56ca4327-20bd-4911-839d-56bb316eb2fd]"
@@ -699,38 +731,22 @@
 
     -- obliterate
     -- bf8e9022-b9e0-40a8-8d92-c71afbe1e8e1
-    if S.Obliterate:IsCastable("Melee") then
+    if S.Obliterate:IsCastable("Melee") 
+      and Everyone.TargetIsValid() then
 
       return "obliterate [bf8e9022-b9e0-40a8-8d92-c71afbe1e8e1]"
     end
 
-    return false;
+    return false
   end
 
-  local function Simcraft_Cooldowns()
-    
-    -- use_items,if=cooldown.pillar_of_frost.ready&(!talent.breath_of_sindragosa.enabled|buff.empower_rune_weapon.up)
-    -- use_item,name=razdunks_big_red_button
-    -- use_item,name=merekthas_fang
-
-    -- potion,if=buff.pillar_of_frost.up&buff.empower_rune_weapon.up
-    -- 84cd8535-d709-4c1d-bcc2-0686790c68b0
-    if HR.CDsON()
-      and Settings.DeathKnight.Commons.UsePotions 
-      and I.BattlePotionOfStrength:IsReady() 
-      and Player:Buff(S.PillarOfFrost) 
-      and Player:Buff(S.EmpowerRuneWeapon) then
-      
-      return "potion [84cd8535-d709-4c1d-bcc2-0686790c68b0]"
-    end
-
-    -- blood_fury,if=buff.pillar_of_frost.up&buff.empower_rune_weapon.up
-    -- berserking,if=buff.pillar_of_frost.up
+  local function simc_cooldowns()
 
     -- pillar_of_frost,if=cooldown.empower_rune_weapon.remains
     -- 2e7b5ff3-a86d-4864-9b88-a0ca1fe69882
     -- added extra code to handle CD variables
     if S.PillarOfFrost:IsCastable() 
+      and Everyone.TargetIsValid()
       and (S.EmpowerRuneWeapon:CooldownDown()
         or ((not HR.CDsON())
           and talent_enabled("Breath of Sindragosa")
@@ -742,6 +758,7 @@
     -- breath_of_sindragosa,if=cooldown.empower_rune_weapon.remains&cooldown.pillar_of_frost.remains
     -- fb3a9ecf-d010-4885-9f72-6f8db764e83b
     if HR.CDsON() 
+      and Everyone.TargetIsValid()
       and Target:IsInRange(15)
       and S.BreathofSindragosa:IsCastable() 
       and S.EmpowerRuneWeapon:CooldownRemains() > 0 
@@ -753,6 +770,7 @@
     -- empower_rune_weapon,if=cooldown.pillar_of_frost.ready&!talent.breath_of_sindragosa.enabled&rune.time_to_5>gcd&runic_power.deficit>=10
     -- 8cb9f142-310f-40af-b92b-b16a5f685695
     if HR.CDsON() 
+      and Everyone.TargetIsValid()
       and Target:IsInRange(15)
       and S.EmpowerRuneWeapon:IsCastable() 
       and S.PillarOfFrost:CooldownUp() 
@@ -766,6 +784,7 @@
     -- empower_rune_weapon,if=cooldown.pillar_of_frost.ready&talent.breath_of_sindragosa.enabled&rune>=3&runic_power>60
     -- b0a97ff0-e8b2-4715-a16e-7b2392933228
     if HR.CDsON() 
+      and Everyone.TargetIsValid()
       and Target:IsInRange(15)
       and S.EmpowerRuneWeapon:IsCastable() 
       and S.PillarOfFrost:CooldownUp()
@@ -784,7 +803,8 @@
 
       -- chains_of_ice,if=buff.cold_heart.stack>5&target.time_to_die<gcd
       -- 136ab978-d120-4a4a-a8a8-49180174ee69
-      if S.ChainsOfIce:IsCastable(30) 
+      if S.ChainsOfIce:IsReady(30) 
+        and Everyone.TargetIsValid()
         and Player:BuffStack(S.ColdHeartBuff) > 5 
         and Target:TimeToDie() < Player:GCD() then
 
@@ -793,7 +813,8 @@
 
       -- chains_of_ice,if=(buff.pillar_of_frost.remains<=gcd*(1+cooldown.frostwyrms_fury.ready)|buff.pillar_of_frost.remains<rune.time_to_3)&buff.pillar_of_frost.up
       -- 5434b084-bb4c-4bb1-bbfb-2e2ee2b843bc
-      if S.ChainsOfIce:IsCastable(30) 
+      if S.ChainsOfIce:IsReady(30) 
+        and Everyone.TargetIsValid()
         and Player:Buff(S.PillarOfFrost)
         and (Player:BuffRemains(S.PillarOfFrost) <= Player:GCD() * (1 + (S.FrostwyrmsFury:CooldownUp() and 1 or 0)) 
           or Player:BuffRemains(S.PillarOfFrost) < Player:RuneTimeToX(3)) then
@@ -811,7 +832,7 @@
     --   return "frostwyrms_fury [2a41ac90-7c23-4afc-8fb3-3b908ac14190]"
     -- end
 
-    return false;
+    return false
   end
 
   function FrostDK_APL()
@@ -820,111 +841,113 @@
       return nil
     end
 
-    -- UPDATE UNITS
-    HL.GetEnemies("Melee");
-    HL.GetEnemies(8,true);  -- Frostscythe 8yd
-    HL.GetEnemies(10,true); -- Howling Blast 10yd
-    HL.GetEnemies(30,true); -- Glacial Advance 30yd
-    Everyone.AoEToggleEnemiesUpdate();
+    -- Unit Update
+    HL.GetEnemies("Melee")
+    HL.GetEnemies(8,true)
+    HL.GetEnemies(10,true)
+    HL.GetEnemies(20,true)
+    HL.GetEnemies(30,true)
+    Everyone.AoEToggleEnemiesUpdate()
 
     -- OPENER
     if not Player:AffectingCombat() then
       -- howling_blast
       -- f362b35e-c01f-4c6c-8725-820e45eeafe8
-      if Everyone.TargetIsValid() and Target:IsInRange(30) and (not Target:Debuff(S.FrostFever)) then
+      if Everyone.TargetIsValid() 
+        and S.HowlingBlast:IsReady(30) 
+        and (not Target:Debuff(S.FrostFever)) then
           return "howling_blast [f362b35e-c01f-4c6c-8725-820e45eeafe8]"
       end
       return
     end
 
-    -- In Combat
-    if Everyone.TargetIsValid() then
-      -- Death Strike Heal
-      -- ff10ee71-e294-46c0-8c39-f5212edb6ea7
-      if ShouldDeathStrike() and S.DeathStrike:IsReady("Melee") then
-          return "death_strike [ff10ee71-e294-46c0-8c39-f5212edb6ea7]"
-      end
+    -- ROTATION
 
-      -- howling_blast,if=!dot.frost_fever.ticking&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
-      -- d041b15d-cae4-4c21-a394-d82b046d2bba
-      -- added extra code to handle CD variables
-      if S.HowlingBlast:IsCastable(30, true) 
-        and S.HowlingBlast:IsReady(30) 
-        and (not Target:Debuff(S.FrostFever)) 
-        and ((not talent_enabled("Breath of Sindragosa")) 
-          or S.BreathofSindragosa:CooldownRemains() > 15 
-          or (not HR.CDsON())) then
-
-        return "howling_blast [d041b15d-cae4-4c21-a394-d82b046d2bba]"
-      end
-
-      -- glacial_advance,if=buff.icy_talons.remains<=gcd&buff.icy_talons.up&spell_targets.glacial_advance>=2&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
-      -- 76de4f33-e708-4e48-b3e8-77ecf425ce21
-      -- added extra code to handle CD variables
-      if talent_enabled("Glacial Advance")
-        and S.GlacialAdvance:IsCastable() 
-        and Player:BuffRemains(S.IcyTalonsBuff) <= Player:GCD() 
-        and Player:Buff(S.IcyTalonsBuff) 
-        and (Cache.EnemiesCount[10] >= 2) 
-        and ((not talent_enabled("Breath of Sindragosa")) 
-          or S.BreathofSindragosa:CooldownRemains() > 15 
-          or (not HR.CDsON())) then
-
-        return "glacial_advance [76de4f33-e708-4e48-b3e8-77ecf425ce21]"
-      end
-
-      -- frost_strike,if=buff.icy_talons.remains<=gcd&buff.icy_talons.up&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
-      -- 44792852-fba8-4935-b547-27541897bf73
-      -- added extra code to handle CD variables
-      if S.FrostStrike:IsReady("Melee") 
-        and (not ShouldDeathStrike())
-        and Player:BuffRemains(S.IcyTalonsBuff) <= Player:GCD() 
-        and Player:Buff(S.IcyTalonsBuff) 
-        and ((not talent_enabled("Breath of Sindragosa")) 
-          or S.BreathofSindragosa:CooldownRemains() > 15 
-          or (not HR.CDsON())) then
-
-        return "frost_strike [44792852-fba8-4935-b547-27541897bf73]"
-      end
-
-      -- TRINKETS
-
-      -- call_action_list,name=cooldowns
-      ShouldReturn = Simcraft_Cooldowns();
-      if ShouldReturn then return ShouldReturn; end
+    -- Death Strike Heal
+    -- ff10ee71-e294-46c0-8c39-f5212edb6ea7
+    if Everyone.TargetIsValid() and ShouldDeathStrike() and S.DeathStrike:IsReady("Melee") then
+        return "death_strike [ff10ee71-e294-46c0-8c39-f5212edb6ea7]"
     end
 
+    -- howling_blast,if=!dot.frost_fever.ticking&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
+    -- d041b15d-cae4-4c21-a394-d82b046d2bba
+    -- added extra code to handle CD variables
+    if S.HowlingBlast:IsReady(30) 
+      and Everyone.TargetIsValid()
+      and (not Target:Debuff(S.FrostFever)) 
+      and ((not talent_enabled("Breath of Sindragosa")) 
+        or S.BreathofSindragosa:CooldownRemains() > 15 
+        or (not HR.CDsON())) then
+
+      return "howling_blast [d041b15d-cae4-4c21-a394-d82b046d2bba]"
+    end
+
+    -- glacial_advance,if=buff.icy_talons.remains<=gcd&buff.icy_talons.up&spell_targets.glacial_advance>=2&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
+    -- 76de4f33-e708-4e48-b3e8-77ecf425ce21
+    -- added extra code to handle CD variables
+    if talent_enabled("Glacial Advance")
+      and Everyone.TargetIsValid()
+      and S.GlacialAdvance:IsCastable() 
+      and Player:BuffRemains(S.IcyTalonsBuff) <= Player:GCD() 
+      and Player:Buff(S.IcyTalonsBuff) 
+      and (Cache.EnemiesCount[10] >= 2) 
+      and ((not talent_enabled("Breath of Sindragosa")) 
+        or S.BreathofSindragosa:CooldownRemains() > 15 
+        or (not HR.CDsON())) then
+
+      return "glacial_advance [76de4f33-e708-4e48-b3e8-77ecf425ce21]"
+    end
+
+    -- frost_strike,if=buff.icy_talons.remains<=gcd&buff.icy_talons.up&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
+    -- 44792852-fba8-4935-b547-27541897bf73
+    -- added extra code to handle CD variables
+    if S.FrostStrike:IsReady("Melee") 
+      and Everyone.TargetIsValid()
+      and (not ShouldDeathStrike())
+      and Player:BuffRemains(S.IcyTalonsBuff) <= Player:GCD() 
+      and Player:Buff(S.IcyTalonsBuff) 
+      and ((not talent_enabled("Breath of Sindragosa")) 
+        or S.BreathofSindragosa:CooldownRemains() > 15 
+        or (not HR.CDsON())) then
+
+      return "frost_strike [44792852-fba8-4935-b547-27541897bf73]"
+    end
+
+    -- call_action_list,name=cooldowns
+    ShouldReturn = simc_cooldowns()
+    if ShouldReturn then return ShouldReturn end
+
     -- run_action_list,name=bos_pooling,if=talent.breath_of_sindragosa.enabled&cooldown.breath_of_sindragosa.remains<5
-    if HR.CDsON() 
+    if (HR.CDsON() or WH_FROST_DK_POOLING_FREEZE)
       and talent_enabled("Breath of Sindragosa") 
       and S.BreathofSindragosa:CooldownRemains() < 5 then
-        ShouldReturn = Simcraft_BoS_Pooling();
-        if ShouldReturn then return ShouldReturn; end
+        ShouldReturn = simc_bos_pooling()
+        if ShouldReturn then return ShouldReturn end
         return "bos_pooling"
     end
 
     -- actions+=/run_action_list,name=bos_ticking,if=dot.breath_of_sindragosa.ticking
     if Player:Buff(S.BreathofSindragosa) then
-        ShouldReturn = Simcraft_BoS_Ticking();
-        if ShouldReturn then return ShouldReturn; end
+        ShouldReturn = simc_bos_ticking()
+        if ShouldReturn then return ShouldReturn end
         return "bos_ticking"
     end
 
     --actions+=/run_action_list,name=obliteration,if=buff.pillar_of_frost.up&talent.obliteration.enabled
-    if (Player:BuffP(S.PillarOfFrost) and talent_enabled("Obliteration")) then
-        ShouldReturn = Simcraft_Obliteration();
-        if ShouldReturn then return ShouldReturn; end
+    if (Player:Buff(S.PillarOfFrost) and talent_enabled("Obliteration")) then
+        ShouldReturn = simc_obliteration()
+        if ShouldReturn then return ShouldReturn end
     end
 
     --actions+=/run_action_list,name=aoe,if=active_enemies>=2
     if HR.AoEON() and Cache.EnemiesCount[10] >= 2 then
-      ShouldReturn = Simcraft_AOE();
-      if ShouldReturn then return ShouldReturn; end
+      ShouldReturn = simc_aoe()
+      if ShouldReturn then return ShouldReturn end
     end
 
     --actions+=/call_action_list,name=standard
-    ShouldReturn = Simcraft_Standard();
-    if ShouldReturn then return ShouldReturn; end
+    ShouldReturn = simc_standard()
+    if ShouldReturn then return ShouldReturn end
 
     return "pool"
   end

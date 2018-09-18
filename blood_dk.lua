@@ -1,29 +1,29 @@
 --- ========== TODO ==========
 
   -- timed based DS heals
-  -- more aggro on aoe pulls and mobs without threat
   -- auto cd usage for IBF and AMS
   
 --- ========== HEADER ==========
 
-  local FILE_VERSION = 20180917
-  local addonName, addonTable = ...;
-  local HL = HeroLib;
-  local Cache = HeroCache;
-  local Unit = HL.Unit;
-  local Player = Unit.Player;
-  local Target = Unit.Target;
-  local Spell = HL.Spell;
-  local Item = HL.Item;
-  local HR = HeroRotation;
+  local FILE_VERSION = 20180917-3
+
+  local addonName, addonTable = ...
+  local HL = HeroLib
+  local Cache = HeroCache
+  local Unit = HL.Unit
+  local Player = Unit.Player
+  local Target = Unit.Target
+  local Spell = HL.Spell
+  local Item = HL.Item
+  local HR = HeroRotation
 
 --- ========== LOCAL VARIABLES ==========
 
-  local Everyone = HR.Commons.Everyone;
-  local DeathKnight = HR.Commons.DeathKnight;
-  local Settings = nil;
-  local I = nil;
-  local S = nil;
+  local Everyone = HR.Commons.Everyone
+  local DeathKnight = HR.Commons.DeathKnight
+  local Settings = nil
+  local I = nil
+  local S = nil
 
   local function Initialize()
     if not HL then HL = HeroLib end
@@ -38,7 +38,7 @@
     if not DeathKnight then DeathKnight = HR.Commons.DeathKnight end
 
     -- Spells
-    if not Spell.DeathKnight then Spell.DeathKnight = {}; end
+    if not Spell.DeathKnight then Spell.DeathKnight = {} end
     Spell.DeathKnight.Blood = {
     -- Racials
       ArcaneTorrent         = Spell(50613),
@@ -71,22 +71,22 @@
       HemostasisBuff       = Spell(273947),
       -- Misc
       Pool            = Spell(9999000010)
-    };
-    S = Spell.DeathKnight.Blood;
+    }
+    S = Spell.DeathKnight.Blood
 
     -- Items
-    if not Item.DeathKnight then Item.DeathKnight = {}; end
+    if not Item.DeathKnight then Item.DeathKnight = {} end
     Item.DeathKnight.Blood = {
       BattlePotionOfStrength = Item(163224)
-    };
-    I = Item.DeathKnight.Blood;
+    }
+    I = Item.DeathKnight.Blood
 
     -- GUI Settings
     if (not Settings) or (not Settings.DeathKnight) then
       Settings = {
         General = HR.GUISettings.General,
         DeathKnight = HR.GUISettings.APL.DeathKnight
-      };
+      }
     end
   end
 
@@ -131,11 +131,22 @@
     end
 
     -- Unit Update
-    HL.GetEnemies("Melee");
-    HL.GetEnemies(8, true); -- Death and Decay & Bonestorm
-    HL.GetEnemies(10, true); -- Blood Boil
-    HL.GetEnemies(20, true);
+    HL.GetEnemies("Melee")
+    HL.GetEnemies(8,true)
+    HL.GetEnemies(10,true)
+    HL.GetEnemies(20,true)
+    HL.GetEnemies(30,true)
+    Everyone.AoEToggleEnemiesUpdate()
 
+    -- vampiric_blood -- HEALING LOGIC
+    -- 1b933d26-06b2-4c22-9994-52ed5f9f58fe
+    if S.VampiricBlood:IsReady()
+      and Player:HealthPercentage() < 40 then
+
+      return "vampiric_blood [1b933d26-06b2-4c22-9994-52ed5f9f58fe]"
+    end
+
+    -- don't interrupt blooddrinkers
     if Player:IsChanneling(S.Blooddrinker) then
       return "pool"
     end
@@ -153,11 +164,12 @@
 
     -- In Combat
     if Everyone.TargetIsValid() then
+      
       -- Units without Blood Plague
-      local UnitsWithoutBloodPlague = 0;
+      local UnitsWithoutBloodPlague = 0
       for _, CycleUnit in pairs(Cache.Enemies[10]) do
         if not CycleUnit:Debuff(S.BloodPlague) then
-          UnitsWithoutBloodPlague = UnitsWithoutBloodPlague + 1;
+          UnitsWithoutBloodPlague = UnitsWithoutBloodPlague + 1
         end
       end
 
@@ -172,13 +184,6 @@
         return "dancing_rune_weapon [90024159-aa6f-41a8-a8cb-5123aee46958]"
       end
 
-      -- vampiric_blood -- HEALING LOGIC
-      -- 1b933d26-06b2-4c22-9994-52ed5f9f58fe
-      if S.VampiricBlood:IsReady()
-        and Player:HealthPercentage() < 40 then
-
-        return "vampiric_blood [1b933d26-06b2-4c22-9994-52ed5f9f58fe]"
-      end
 
       -- death_strike -- HEALING LOGIC
       -- e8c226f1-97ad-4f27-9849-82454ba6ae1e
@@ -196,10 +201,23 @@
         return "death_strike [140c0716-6144-49b7-a5d5-65ddc00790eb]"
       end
 
+      -- INCREASED PRIORITY OF THIS ACTION BY COPYING BLOOD BOIL LOGIC BELOW BECAUSE OF M+ THREAT ISSUES
+      -- blood_boil,if=charges_fractional>=1.8&(buff.hemostasis.stack<=(5-spell_targets.blood_boil)|spell_targets.blood_boil>2)
+      -- b92a9739-6a4b-4268-9a68-f4aa79dff949
+      if S.BloodBoil:IsReady() 
+        and S.BloodBoil:Charges() >= 2
+        and Cache.EnemiesCount[10] >= 1
+        and (Player:BuffStack(S.HemostasisBuff) <= (5 - Cache.EnemiesCount[10])
+          or (not Player:Buff(S.HemostasisBuff))
+          or Cache.EnemiesCount[10] > 2) then
+
+        return "blood_boil [b92a9739-6a4b-4268-9a68-f4aa79dff949]"
+      end
+
       -- blooddrinker,if=!buff.dancing_rune_weapon.up
       -- 4f178a0d-3f68-42ae-9a13-630d3e5984a3
       if talent_enabled("Blooddrinker")
-        and S.Blooddrinker:IsReady(30) 
+        and S.Blooddrinker:IsReady(30)
         and (not Player:ShouldStopCasting()) 
         and (not Player:Buff(S.DancingRuneWeaponBuff)) then
 
