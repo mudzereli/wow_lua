@@ -1,10 +1,11 @@
 --- ========== TODO ==========
 
-  -- pooling only variable
-  
+  -- better / auto cd handling?
+  -- change is_boss ignore range checks to list of "big mobs" by name?
+
 --- ========== HEADER ==========
   
-  local FILE_VERSION = 20180917-3
+  local FILE_VERSION = 20180919-4
 
   WH_FROST_DK_POOLING_FREEZE = false
 
@@ -229,7 +230,8 @@
 
     -- frost_strike,if=cooldown.remorseless_winter.remains<=2*gcd&talent.gathering_storm.enabled
     -- cb4a28f5-821e-4fde-9707-3a3450c2e151
-    if S.FrostStrike:IsReady("Melee") 
+    if S.FrostStrike:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and S.RemorselessWinter:CooldownRemains() <= 2 * Player:GCD() 
@@ -240,7 +242,7 @@
 
     -- howling_blast,if=buff.rime.up
     -- 8da88256-bedd-409b-87dc-5f27b05220fa
-    if S.HowlingBlast:IsReady(30) 
+    if S.HowlingBlast:IsReady(30)
       and Everyone.TargetIsValid()
       and Player:Buff(S.Rime) then
 
@@ -249,7 +251,8 @@
 
     -- obliterate,if=!buff.frozen_pulse.up&talent.frozen_pulse.enabled
     -- aa354962-0e9b-4dd5-be84-f296d214da2e
-    if S.Obliterate:IsCastable("Melee") 
+    if S.Obliterate:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and talent_enabled("Frozen Pulse")
       and (not Player:Buff(S.FrozenPulse)) then
@@ -259,7 +262,8 @@
 
     -- frost_strike,if=runic_power.deficit<(15+talent.runic_attenuation.enabled*3)
     -- 2d3a06a3-0e05-4cd9-a9c1-b31cf70b4c06
-    if S.FrostStrike:IsReady("Melee") 
+    if S.FrostStrike:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and Player:RunicPowerDeficit() < (15 + (binarize(talent_enabled("Runic Attenuation")) * 3)) then
@@ -281,7 +285,8 @@
 
     -- obliterate,if=runic_power.deficit>(25+talent.runic_attenuation.enabled*3)
     -- 4025c58f-8fa1-41db-931a-be45cb397cbe
-    if S.Obliterate:IsCastable("Melee") 
+    if S.Obliterate:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and Player:RunicPowerDeficit() > (25 + (binarize(talent_enabled("Runic Attenuation")) * 3)) then
 
@@ -290,7 +295,8 @@
 
     -- frost_strike
     -- 76ce6df2-d174-4045-9a2b-9b19939b64a5
-    if S.FrostStrike:IsReady("Melee")
+    if S.FrostStrike:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target"))
       and Everyone.TargetIsValid()
       and (not ShouldDeathStrike()) then
 
@@ -330,7 +336,8 @@
 
     -- frost_strike,if=cooldown.remorseless_winter.remains<=2*gcd&talent.gathering_storm.enabled
     -- 25ba261e-8b2c-41a3-a0a0-24cb4b6c2063
-    if S.FrostStrike:IsReady("Melee") 
+    if S.FrostStrike:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and S.RemorselessWinter:CooldownRemains() <= 2 * Player:GCD() 
@@ -371,7 +378,8 @@
 
     -- frost_strike,if=runic_power.deficit<(15+talent.runic_attenuation.enabled*3)
     -- 04798d52-1baa-4eb0-ac01-955a1426d8ae
-    if S.FrostStrike:IsReady("Melee") 
+    if S.FrostStrike:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and Player:RunicPowerDeficit() < (15 + (binarize(talent_enabled("Runic Attenuation")) * 3)) then
@@ -398,7 +406,8 @@
 
     -- obliterate,if=runic_power.deficit>(25+talent.runic_attenuation.enabled*3)
     -- d256067c-9194-43fe-a8c0-69896d992187
-    if S.Obliterate:IsCastable("Melee") 
+    if S.Obliterate:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and Player:RunicPowerDeficit() < (15 + (binarize(talent_enabled("Runic Attenuation")) * 3)) then
 
@@ -416,7 +425,8 @@
 
     -- frost_strike
     -- f8d87eba-5bb4-4382-a9dd-ff1a98edb38e
-    if S.FrostStrike:IsReady("Melee")
+    if S.FrostStrike:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target"))
       and Everyone.TargetIsValid()
       and (not ShouldDeathStrike()) then
 
@@ -438,7 +448,7 @@
 
     -- howling_blast,if=buff.rime.up
     -- acc12d67-ec75-490d-a72f-cfec17ea3232
-    if S.HowlingBlast:IsReady(30) 
+    if S.HowlingBlast:IsReady(30)
       and Everyone.TargetIsValid()      
       and Player:Buff(S.Rime) then
 
@@ -447,7 +457,8 @@
 
     -- obliterate,if=rune.time_to_4<gcd&runic_power.deficit>=25
     -- 51395f1a-afe8-4df7-9183-cc747b948f20
-    if S.Obliterate:IsCastable("Melee") 
+    if S.Obliterate:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and Player:RuneTimeToX(4) < Player:GCD() 
       and Player:RunicPowerDeficit() >= 25 then
@@ -469,7 +480,8 @@
 
     -- frost_strike,if=runic_power.deficit<20&cooldown.pillar_of_frost.remains>rune.time_to_4
     -- bfbb82a5-54b6-4c4c-9ec5-9112d1af7da8
-    if S.FrostStrike:IsReady("Melee") 
+    if S.FrostStrike:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and Player:RunicPowerDeficit() < 20
@@ -505,7 +517,8 @@
 
     -- obliterate,if=runic_power.deficit>=(35+talent.runic_attenuation.enabled*3)
     -- bbada2fd-bba2-44e2-bbaa-a0d37f45ce71
-    if S.Obliterate:IsCastable("Melee") 
+    if S.Obliterate:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and Player:RunicPowerDeficit() >= (35 + (binarize(talent_enabled("Runic Attenuation")) * 3)) then
 
@@ -526,7 +539,8 @@
 
     -- frost_strike,if=cooldown.pillar_of_frost.remains>rune.time_to_4&runic_power.deficit<40
     -- 1094aa7b-3694-4e7c-a0f3-f8e08aa0fdc0
-    if S.FrostStrike:IsReady("Melee") 
+    if S.FrostStrike:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and S.PillarOfFrost:CooldownRemains() > Player:RuneTimeToX(4) 
@@ -553,7 +567,8 @@
 
     -- obliterate,if=runic_power<=30
     -- 516a4de0-cb97-4d8b-8e00-8833f4fb3802
-    if S.Obliterate:IsCastable("Melee") 
+    if S.Obliterate:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and Player:RunicPower() <= 30 then
 
@@ -570,7 +585,7 @@
 
     -- howling_blast,if=buff.rime.up
     -- 983aab94-6eca-4720-8119-7f6315afef67
-    if S.HowlingBlast:IsReady(30) 
+    if S.HowlingBlast:IsReady(30)
       and Everyone.TargetIsValid()
       and Player:Buff(S.Rime) then
 
@@ -579,7 +594,8 @@
 
     -- obliterate,if=rune.time_to_5<gcd|runic_power<=45
     -- c245b14a-c217-4e29-84a3-174755c4f724
-    if S.Obliterate:IsCastable("Melee") 
+    if S.Obliterate:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and (Player:RuneTimeToX(5) < Player:GCD() 
         or Player:RunicPower() <= 45) then
@@ -628,7 +644,8 @@
 
     -- obliterate,if=runic_power.deficit>25|rune>3
     -- c2998ae7-9a96-4f1c-a81d-0f1e36b47122
-    if S.Obliterate:IsCastable("Melee") 
+    if S.Obliterate:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and (Player:RunicPowerDeficit() > 25 
         or Player:Runes() > 3) then
@@ -651,7 +668,8 @@
 
     -- obliterate,if=!talent.frostscythe.enabled&!buff.rime.up&spell_targets.howling_blast>=3
     -- 8072b18a-e829-4991-aad8-5d6eca9ec7c8
-    if S.Obliterate:IsCastable("Melee") 
+    if S.Obliterate:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and (not talent_enabled("Frostscythe"))
       and (not Player:Buff(S.Rime))
@@ -676,7 +694,8 @@
 
     -- obliterate,if=buff.killing_machine.react|(buff.killing_machine.up&(prev_gcd.1.frost_strike|prev_gcd.1.howling_blast|prev_gcd.1.glacial_advance))
     -- 2411d6cd-8b10-4e82-b3fb-d53fc82e5df0
-    if S.Obliterate:IsCastable("Melee") 
+    if S.Obliterate:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and (Player:Buff(S.KillingMachine)
         or (Player:Buff(S.KillingMachine)
@@ -710,7 +729,8 @@
 
     -- frost_strike,if=!buff.rime.up|runic_power.deficit<10|rune.time_to_2>gcd
     -- e4a5e42a-67a0-44c5-9eab-acaef30a67d1
-    if S.FrostStrike:IsReady("Melee") 
+    if S.FrostStrike:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and (not Player:Buff(S.Rime)
@@ -722,7 +742,7 @@
 
     -- howling_blast,if=buff.rime.up
     -- 56ca4327-20bd-4911-839d-56bb316eb2fd
-    if S.HowlingBlast:IsReady(30) 
+    if S.HowlingBlast:IsReady(30)
       and Everyone.TargetIsValid()
       and Player:Buff(S.Rime) then
 
@@ -731,7 +751,8 @@
 
     -- obliterate
     -- bf8e9022-b9e0-40a8-8d92-c71afbe1e8e1
-    if S.Obliterate:IsCastable("Melee") 
+    if S.Obliterate:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid() then
 
       return "obliterate [bf8e9022-b9e0-40a8-8d92-c71afbe1e8e1]"
@@ -854,7 +875,7 @@
       -- howling_blast
       -- f362b35e-c01f-4c6c-8725-820e45eeafe8
       if Everyone.TargetIsValid() 
-        and S.HowlingBlast:IsReady(30) 
+        and S.HowlingBlast:IsReady(30)
         and (not Target:Debuff(S.FrostFever)) then
           return "howling_blast [f362b35e-c01f-4c6c-8725-820e45eeafe8]"
       end
@@ -865,14 +886,14 @@
 
     -- Death Strike Heal
     -- ff10ee71-e294-46c0-8c39-f5212edb6ea7
-    if Everyone.TargetIsValid() and ShouldDeathStrike() and S.DeathStrike:IsReady("Melee") then
+    if Everyone.TargetIsValid() and ShouldDeathStrike() and S.DeathStrike:IsReady() then
         return "death_strike [ff10ee71-e294-46c0-8c39-f5212edb6ea7]"
     end
 
     -- howling_blast,if=!dot.frost_fever.ticking&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
     -- d041b15d-cae4-4c21-a394-d82b046d2bba
     -- added extra code to handle CD variables
-    if S.HowlingBlast:IsReady(30) 
+    if S.HowlingBlast:IsReady(30)
       and Everyone.TargetIsValid()
       and (not Target:Debuff(S.FrostFever)) 
       and ((not talent_enabled("Breath of Sindragosa")) 
@@ -901,7 +922,8 @@
     -- frost_strike,if=buff.icy_talons.remains<=gcd&buff.icy_talons.up&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
     -- 44792852-fba8-4935-b547-27541897bf73
     -- added extra code to handle CD variables
-    if S.FrostStrike:IsReady("Melee") 
+    if S.FrostStrike:IsReady()
+      and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and (not ShouldDeathStrike())
       and Player:BuffRemains(S.IcyTalonsBuff) <= Player:GCD() 

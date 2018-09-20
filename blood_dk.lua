@@ -5,7 +5,7 @@
   
 --- ========== HEADER ==========
 
-  local FILE_VERSION = 20180917-3
+  local FILE_VERSION = 20180919-2
 
   local addonName, addonTable = ...
   local HL = HeroLib
@@ -154,8 +154,8 @@
     if not Player:AffectingCombat() then
       -- deaths_caress
       -- 6c485c67-8657-4a12-a363-960c2873e79b
-      if Everyone.TargetIsValid() 
-        and Target:IsInRange(30) 
+      if S.DeathsCaress:IsReady(30)
+        and Everyone.TargetIsValid() 
         and (not Target:Debuff(S.BloodPlague)) then
           return "deaths_caress [6c485c67-8657-4a12-a363-960c2873e79b]"
       end
@@ -164,20 +164,12 @@
 
     -- In Combat
     if Everyone.TargetIsValid() then
-      
-      -- Units without Blood Plague
-      local UnitsWithoutBloodPlague = 0
-      for _, CycleUnit in pairs(Cache.Enemies[10]) do
-        if not CycleUnit:Debuff(S.BloodPlague) then
-          UnitsWithoutBloodPlague = UnitsWithoutBloodPlague + 1
-        end
-      end
 
       -- dancing_rune_weapon,if=!talent.blooddrinker.enabled|!cooldown.blooddrinker.ready
       -- 90024159-aa6f-41a8-a8cb-5123aee46958
       if HR.CDsON() 
         and S.DancingRuneWeapon:IsReady() 
-        and (Cache.EnemiesCount["Melee"] >= 3 or (is_boss("target") and Target:IsInRange(8))) -- ADDED LOGIC
+        and (Cache.EnemiesCount["Melee"] >= 3 or (is_boss("target") and Target:IsInRange(10))) -- ADDED LOGIC
         and ((not talent_enabled("Blooddrinker")) 
           or (not S.Blooddrinker:CooldownUp())) then
         
@@ -187,7 +179,8 @@
 
       -- death_strike -- HEALING LOGIC
       -- e8c226f1-97ad-4f27-9849-82454ba6ae1e
-      if S.DeathStrike:IsReady("Melee")
+      if S.DeathStrike:IsReady()
+        and (Target:IsInRange("Melee") or is_boss("target"))
         and Player:HealthPercentage() < 85 then
 
         return "death_strike [e8c226f1-97ad-4f27-9849-82454ba6ae1e]"
@@ -195,7 +188,8 @@
 
       -- death_strike,if=runic_power.deficit<=10
       -- 140c0716-6144-49b7-a5d5-65ddc00790eb
-      if S.DeathStrike:IsReady("Melee") 
+      if S.DeathStrike:IsReady()
+        and (Target:IsInRange("Melee") or is_boss("target")) 
         and Player:RunicPowerDeficit() <= 10 then
 
         return "death_strike [140c0716-6144-49b7-a5d5-65ddc00790eb]"
@@ -226,7 +220,8 @@
 
       -- marrowrend,if=(buff.bone_shield.remains<=rune.time_to_3|buff.bone_shield.remains<=(gcd+cooldown.blooddrinker.ready*talent.blooddrinker.enabled*2)|buff.bone_shield.stack<3)&runic_power.deficit>=20
       -- 3c4db0ed-3b11-46f4-be6b-5404d29e94f7
-      if S.Marrowrend:IsReady("Melee") 
+      if S.Marrowrend:IsReady() 
+        and (Target:IsInRange("Melee") or is_boss("target"))
         and Player:RunicPowerDeficit() >= 20
         and (Player:BuffRemains(S.BoneShield) <= Player:RuneTimeToX(3)
           or Player:BuffRemains(S.BoneShield) <= (Player:GCD() + binarize(S.Blooddrinker:CooldownUp())*binarize(talent_enabled("Blooddrinker"))*2)
@@ -250,7 +245,8 @@
 
       -- marrowrend,if=buff.bone_shield.stack<5&talent.ossuary.enabled&runic_power.deficit>=15
       -- 44ae1d6e-c069-44d5-b267-e69541da9907
-      if S.Marrowrend:IsReady("Melee") 
+      if S.Marrowrend:IsReady() 
+        and (Target:IsInRange("Melee") or is_boss("target"))
         and (Player:BuffStack(S.BoneShield) < 5
           or (not Player:Buff(S.BoneShield)))
         and talent_enabled("Ossuary")
@@ -261,8 +257,8 @@
 
       -- bonestorm,if=runic_power>=100&!buff.dancing_rune_weapon.up
       -- f9cd611e-7452-47f4-8853-b31238756a25
-      if S.Bonestorm:IsReady("Melee")
-        and Target:IsInRange("Melee")
+      if S.Bonestorm:IsReady()
+        and (Target:IsInRange("Melee") or is_boss("target"))
         and Player:RunicPower() >= 100
         and (not Player:Buff(S.DancingRuneWeaponBuff)) then
 
@@ -271,7 +267,8 @@
 
       -- death_strike,if=runic_power.deficit<=(15+buff.dancing_rune_weapon.up*5+spell_targets.heart_strike*talent.heartbreaker.enabled*2)|target.time_to_die<10
       -- 1bf66980-ee7a-446f-998b-d7eb68267723
-      if S.DeathStrike:IsReady("Melee")
+      if S.DeathStrike:IsReady()
+        and (Target:IsInRange("Melee") or is_boss("target"))
         and (Player:RunicPowerDeficit() <= (15 + binarize(Player:Buff(S.DancingRuneWeaponBuff)) * 5 + Cache.EnemiesCount["Melee"] * binarize(talent_enabled("Heartbreaker")) * 2)
           or Target:FilteredTimeToDie("<",10)) then
 
@@ -289,7 +286,8 @@
       -- rune_strike,if=(charges_fractional>=1.8|buff.dancing_rune_weapon.up)&rune.time_to_3>=gcd
       -- 115c0d62-6550-465b-b550-4fe4d89f6716
       if talent_enabled("Rune Strike")
-        and S.RuneStrike:IsReady("Melee")
+        and S.RuneStrike:IsReady()
+        and (Target:IsInRange("Melee") or is_boss("target"))
         and Player:RuneTimeToX(3) >= Player:GCD()
         and (S.RuneStrike:Charges() >= 2
           or Player:Buff(S.DancingRuneWeaponBuff)) then
@@ -299,7 +297,8 @@
 
       -- heart_strike,if=buff.dancing_rune_weapon.up|rune.time_to_4<gcd
       -- 4403976f-8c94-4185-a90d-8e65114297e9
-      if S.HeartStrike:IsReady("Melee")
+      if S.HeartStrike:IsReady()
+        and (Target:IsInRange("Melee") or is_boss("target"))
         and (Player:Buff(S.DancingRuneWeaponBuff)
           or Player:RuneTimeToX(4) < Player:GCD()) then
 
@@ -329,7 +328,7 @@
       -- f4c5dad8-d11d-4add-b531-b8d49352c3e7
       if talent_enabled("Consumption")
         and S.Consumption:IsReady()
-        and Target:IsInRange(8) then
+        and Target:IsInRange(10) then
 
         return "consumption [f4c5dad8-d11d-4add-b531-b8d49352c3e7]"
       end
@@ -344,7 +343,8 @@
 
       -- heart_strike,if=rune.time_to_3<gcd|buff.bone_shield.stack>6
       -- 7ae6f6f1-da2a-4260-ad62-5b4637a4748b
-      if S.HeartStrike:IsReady("Melee")
+      if S.HeartStrike:IsReady()
+        and (Target:IsInRange("Melee") or is_boss("target"))
         and (Player:RuneTimeToX(3) < Player:GCD()
           or Player:BuffStack(S.BoneShield) > 6) then
 
@@ -354,7 +354,8 @@
       -- rune_strike
       -- a3c3943e-9fc5-4aa3-9a8c-a508106c1fe2
       if talent_enabled("Rune Strike")
-        and S.RuneStrike:IsReady("Melee") then
+        and S.RuneStrike:IsReady()
+        and (Target:IsInRange("Melee") or is_boss("target")) then
 
         return "rune_strike [a3c3943e-9fc5-4aa3-9a8c-a508106c1fe2]"
       end

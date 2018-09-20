@@ -1,4 +1,4 @@
-local FILE_VERSION = 20180917
+local FILE_VERSION = 20180919-1
 
 WH_DO_INTERRUPT = true
 WH_DPS_AVERAGE_PERSON = 8000
@@ -404,6 +404,7 @@ function on_cooldown(spellName)
 end
 
 function is_boss(unit)
+    if not UnitExists(unit) then return false end
     return UnitLevel(unit) == -1
 end
 

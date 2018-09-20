@@ -1,8 +1,11 @@
 --- ========== TODO ==========
-  
+
+  -- finish rotation
+  -- use In Range OR BOSS logic to fix range issues w/ bosses
+
 --- ========== HEADER ==========
 
-  local FILE_VERSION = 20180917-2
+  local FILE_VERSION = 20180919-1
 
   local addonName, addonTable = ...;
   local HL = HeroLib;
@@ -112,62 +115,62 @@
 
 --- ========== SIMCRAFT PRIORITY LIST ==========
 
--- # # Executed every time the actor is available.
--- x actions=auto_attack
--- x actions+=/variable,name=pooling_for_gargoyle,value=cooldown.summon_gargoyle.remains<5&talent.summon_gargoyle.enabled
--- # # Racials, Items, and other ogcds
--- x actions+=/arcane_torrent,if=runic_power.deficit>65&(pet.gargoyle.active|!talent.summon_gargoyle.enabled)&rune.deficit>=5
--- x actions+=/blood_fury,if=pet.gargoyle.active|!talent.summon_gargoyle.enabled
--- x actions+=/berserking,if=pet.gargoyle.active|!talent.summon_gargoyle.enabled
--- # # Custom trinkets usage
--- x actions+=/use_items
--- x actions+=/use_item,name=bygone_bee_almanac,if=cooldown.summon_gargoyle.remains>60|!talent.summon_gargoyle.enabled
--- x actions+=/use_item,name=jes_howler,if=pet.gargoyle.active|!talent.summon_gargoyle.enabled
--- x actions+=/use_item,name=galecallers_beak,if=pet.gargoyle.active|!talent.summon_gargoyle.enabled
--- x actions+=/potion,if=cooldown.army_of_the_dead.ready|pet.gargoyle.active|buff.unholy_frenzy.up
--- # # Maintain Virulent Plague
--- * actions+=/outbreak,target_if=(dot.virulent_plague.tick_time_remains+tick_time<=dot.virulent_plague.remains)&dot.virulent_plague.remains<=gcd
--- * actions+=/call_action_list,name=cooldowns
--- - actions+=/run_action_list,name=aoe,if=active_enemies>=2
--- - actions+=/call_action_list,name=generic
+  -- # # Executed every time the actor is available.
+  -- x actions=auto_attack
+  -- x actions+=/variable,name=pooling_for_gargoyle,value=cooldown.summon_gargoyle.remains<5&talent.summon_gargoyle.enabled
+  -- # # Racials, Items, and other ogcds
+  -- x actions+=/arcane_torrent,if=runic_power.deficit>65&(pet.gargoyle.active|!talent.summon_gargoyle.enabled)&rune.deficit>=5
+  -- x actions+=/blood_fury,if=pet.gargoyle.active|!talent.summon_gargoyle.enabled
+  -- x actions+=/berserking,if=pet.gargoyle.active|!talent.summon_gargoyle.enabled
+  -- # # Custom trinkets usage
+  -- x actions+=/use_items
+  -- x actions+=/use_item,name=bygone_bee_almanac,if=cooldown.summon_gargoyle.remains>60|!talent.summon_gargoyle.enabled
+  -- x actions+=/use_item,name=jes_howler,if=pet.gargoyle.active|!talent.summon_gargoyle.enabled
+  -- x actions+=/use_item,name=galecallers_beak,if=pet.gargoyle.active|!talent.summon_gargoyle.enabled
+  -- x actions+=/potion,if=cooldown.army_of_the_dead.ready|pet.gargoyle.active|buff.unholy_frenzy.up
+  -- # # Maintain Virulent Plague
+  -- * actions+=/outbreak,target_if=(dot.virulent_plague.tick_time_remains+tick_time<=dot.virulent_plague.remains)&dot.virulent_plague.remains<=gcd
+  -- * actions+=/call_action_list,name=cooldowns
+  -- * actions+=/run_action_list,name=aoe,if=active_enemies>=2
+  -- * actions+=/call_action_list,name=generic
 
--- - # AoE rotation
--- - actions.aoe=death_and_decay,if=cooldown.apocalypse.remains
--- - actions.aoe+=/defile
--- - actions.aoe+=/epidemic,if=death_and_decay.ticking&rune<2&!variable.pooling_for_gargoyle
--- - actions.aoe+=/death_coil,if=death_and_decay.ticking&rune<2&!variable.pooling_for_gargoyle
--- - actions.aoe+=/scourge_strike,if=death_and_decay.ticking&cooldown.apocalypse.remains
--- - actions.aoe+=/clawing_shadows,if=death_and_decay.ticking&cooldown.apocalypse.remains
--- - actions.aoe+=/epidemic,if=!variable.pooling_for_gargoyle
--- - actions.aoe+=/festering_strike,target_if=debuff.festering_wound.stack<=1&cooldown.death_and_decay.remains
--- - actions.aoe+=/festering_strike,if=talent.bursting_sores.enabled&spell_targets.bursting_sores>=2&debuff.festering_wound.stack<=1
--- - actions.aoe+=/death_coil,if=buff.sudden_doom.react&rune.deficit>=4
--- - actions.aoe+=/death_coil,if=buff.sudden_doom.react&!variable.pooling_for_gargoyle|pet.gargoyle.active
--- - actions.aoe+=/death_coil,if=runic_power.deficit<14&(cooldown.apocalypse.remains>5|debuff.festering_wound.stack>4)&!variable.pooling_for_gargoyle
--- - actions.aoe+=/scourge_strike,if=((debuff.festering_wound.up&cooldown.apocalypse.remains>5)|debuff.festering_wound.stack>4)&cooldown.army_of_the_dead.remains>5
--- - actions.aoe+=/clawing_shadows,if=((debuff.festering_wound.up&cooldown.apocalypse.remains>5)|debuff.festering_wound.stack>4)&cooldown.army_of_the_dead.remains>5
--- - actions.aoe+=/death_coil,if=runic_power.deficit<20&!variable.pooling_for_gargoyle
--- - actions.aoe+=/festering_strike,if=((((debuff.festering_wound.stack<4&!buff.unholy_frenzy.up)|debuff.festering_wound.stack<3)&cooldown.apocalypse.remains<3)|debuff.festering_wound.stack<1)&cooldown.army_of_the_dead.remains>5
--- - actions.aoe+=/death_coil,if=!variable.pooling_for_gargoyle
+  -- # # AoE rotation
+  -- * actions.aoe=death_and_decay,if=cooldown.apocalypse.remains
+  -- * actions.aoe+=/defile
+  -- * actions.aoe+=/epidemic,if=death_and_decay.ticking&rune<2&!variable.pooling_for_gargoyle
+  -- * actions.aoe+=/death_coil,if=death_and_decay.ticking&rune<2&!variable.pooling_for_gargoyle
+  -- - actions.aoe+=/scourge_strike,if=death_and_decay.ticking&cooldown.apocalypse.remains
+  -- - actions.aoe+=/clawing_shadows,if=death_and_decay.ticking&cooldown.apocalypse.remains
+  -- - actions.aoe+=/epidemic,if=!variable.pooling_for_gargoyle
+  -- - actions.aoe+=/festering_strike,target_if=debuff.festering_wound.stack<=1&cooldown.death_and_decay.remains
+  -- - actions.aoe+=/festering_strike,if=talent.bursting_sores.enabled&spell_targets.bursting_sores>=2&debuff.festering_wound.stack<=1
+  -- - actions.aoe+=/death_coil,if=buff.sudden_doom.react&rune.deficit>=4
+  -- - actions.aoe+=/death_coil,if=buff.sudden_doom.react&!variable.pooling_for_gargoyle|pet.gargoyle.active
+  -- - actions.aoe+=/death_coil,if=runic_power.deficit<14&(cooldown.apocalypse.remains>5|debuff.festering_wound.stack>4)&!variable.pooling_for_gargoyle
+  -- - actions.aoe+=/scourge_strike,if=((debuff.festering_wound.up&cooldown.apocalypse.remains>5)|debuff.festering_wound.stack>4)&cooldown.army_of_the_dead.remains>5
+  -- - actions.aoe+=/clawing_shadows,if=((debuff.festering_wound.up&cooldown.apocalypse.remains>5)|debuff.festering_wound.stack>4)&cooldown.army_of_the_dead.remains>5
+  -- - actions.aoe+=/death_coil,if=runic_power.deficit<20&!variable.pooling_for_gargoyle
+  -- - actions.aoe+=/festering_strike,if=((((debuff.festering_wound.stack<4&!buff.unholy_frenzy.up)|debuff.festering_wound.stack<3)&cooldown.apocalypse.remains<3)|debuff.festering_wound.stack<1)&cooldown.army_of_the_dead.remains>5
+  -- - actions.aoe+=/death_coil,if=!variable.pooling_for_gargoyle
 
--- * actions.cooldowns=army_of_the_dead
--- * actions.cooldowns+=/apocalypse,if=debuff.festering_wound.stack>=4
--- * actions.cooldowns+=/dark_transformation
--- * actions.cooldowns+=/summon_gargoyle,if=runic_power.deficit<14
--- * actions.cooldowns+=/unholy_frenzy,if=debuff.festering_wound.stack<4
--- * actions.cooldowns+=/unholy_frenzy,if=active_enemies>=2&((cooldown.death_and_decay.remains<=gcd&!talent.defile.enabled)|(cooldown.defile.remains<=gcd&talent.defile.enabled))
--- * actions.cooldowns+=/soul_reaper,target_if=(target.time_to_die<8|rune<=2)&!buff.unholy_frenzy.up
--- * actions.cooldowns+=/unholy_blight
+  -- * actions.cooldowns=army_of_the_dead
+  -- * actions.cooldowns+=/apocalypse,if=debuff.festering_wound.stack>=4
+  -- * actions.cooldowns+=/dark_transformation
+  -- * actions.cooldowns+=/summon_gargoyle,if=runic_power.deficit<14
+  -- * actions.cooldowns+=/unholy_frenzy,if=debuff.festering_wound.stack<4
+  -- * actions.cooldowns+=/unholy_frenzy,if=active_enemies>=2&((cooldown.death_and_decay.remains<=gcd&!talent.defile.enabled)|(cooldown.defile.remains<=gcd&talent.defile.enabled))
+  -- * actions.cooldowns+=/soul_reaper,target_if=(target.time_to_die<8|rune<=2)&!buff.unholy_frenzy.up
+  -- * actions.cooldowns+=/unholy_blight
 
--- - actions.generic=death_coil,if=buff.sudden_doom.react&!variable.pooling_for_gargoyle|pet.gargoyle.active
--- - actions.generic+=/death_coil,if=runic_power.deficit<14&(cooldown.apocalypse.remains>5|debuff.festering_wound.stack>4)&!variable.pooling_for_gargoyle
--- - actions.generic+=/death_and_decay,if=talent.pestilence.enabled&cooldown.apocalypse.remains
--- - actions.generic+=/defile,if=cooldown.apocalypse.remains
--- - actions.generic+=/scourge_strike,if=((debuff.festering_wound.up&cooldown.apocalypse.remains>5)|debuff.festering_wound.stack>4)&cooldown.army_of_the_dead.remains>5
--- - actions.generic+=/clawing_shadows,if=((debuff.festering_wound.up&cooldown.apocalypse.remains>5)|debuff.festering_wound.stack>4)&cooldown.army_of_the_dead.remains>5
--- - actions.generic+=/death_coil,if=runic_power.deficit<20&!variable.pooling_for_gargoyle
--- - actions.generic+=/festering_strike,if=((((debuff.festering_wound.stack<4&!buff.unholy_frenzy.up)|debuff.festering_wound.stack<3)&cooldown.apocalypse.remains<3)|debuff.festering_wound.stack<1)&cooldown.army_of_the_dead.remains>5
--- - actions.generic+=/death_coil,if=!variable.pooling_for_gargoyle
+  -- - actions.generic=death_coil,if=buff.sudden_doom.react&!variable.pooling_for_gargoyle|pet.gargoyle.active
+  -- - actions.generic+=/death_coil,if=runic_power.deficit<14&(cooldown.apocalypse.remains>5|debuff.festering_wound.stack>4)&!variable.pooling_for_gargoyle
+  -- - actions.generic+=/death_and_decay,if=talent.pestilence.enabled&cooldown.apocalypse.remains
+  -- - actions.generic+=/defile,if=cooldown.apocalypse.remains
+  -- - actions.generic+=/scourge_strike,if=((debuff.festering_wound.up&cooldown.apocalypse.remains>5)|debuff.festering_wound.stack>4)&cooldown.army_of_the_dead.remains>5
+  -- - actions.generic+=/clawing_shadows,if=((debuff.festering_wound.up&cooldown.apocalypse.remains>5)|debuff.festering_wound.stack>4)&cooldown.army_of_the_dead.remains>5
+  -- - actions.generic+=/death_coil,if=runic_power.deficit<20&!variable.pooling_for_gargoyle
+  -- - actions.generic+=/festering_strike,if=((((debuff.festering_wound.stack<4&!buff.unholy_frenzy.up)|debuff.festering_wound.stack<3)&cooldown.apocalypse.remains<3)|debuff.festering_wound.stack<1)&cooldown.army_of_the_dead.remains>5
+  -- - actions.generic+=/death_coil,if=!variable.pooling_for_gargoyle
 
 --- ========== CONVERTED ACTION LIST ==========
   function simc_cooldowns()
@@ -263,6 +266,55 @@
     return false
   end
 
+  function simc_aoe()
+    local pooling_for_gargoyle = (talent_enabled("Summon Gargoyle") and S.SummonGargoyle:CooldownRemains() < 5)
+
+    -- death_and_decay,if=cooldown.apocalypse.remains
+    -- e784331f-5e03-4790-9fb0-fab01229f545
+    if S.DeathAndDecay.IsReady()
+      and Cache.EnemiesCount[8] >= 2
+      and (S.Apocalypse:CooldownRemains() > 0 or (not HR.CDsON())) then -- added logic for turning off CDs
+
+      return "death_and_decay [e784331f-5e03-4790-9fb0-fab01229f545]"
+    end
+
+    -- defile
+    -- dbb11eb5-ef29-4a68-9156-541be715e4ac
+    if S.DeathAndDecay.IsReady()
+      and Cache.EnemiesCount[8] >= 2 then
+
+      return "defile [dbb11eb5-ef29-4a68-9156-541be715e4ac]"
+    end
+
+    -- epidemic,if=death_and_decay.ticking&rune<2&!variable.pooling_for_gargoyle
+    -- TODO: find better way to check if DND is ticking
+    -- 0503b99a-e2e2-4112-9d8c-ee3431206e28
+    if talent_enabled("Epidemic")
+      and S.DeathAndDecay:CooldownRemains() >= 20
+      and Player:Runes() < 2
+      and not pooling_for_gargoyle then
+
+      return "epidemic [0503b99a-e2e2-4112-9d8c-ee3431206e28]"
+    end
+
+    -- death_coil,if=death_and_decay.ticking&rune<2&!variable.pooling_for_gargoyle
+    -- TODO: find better way to check if DND is ticking
+    -- a59f3a03-1c76-471a-b4e6-51387fcf1731
+    if S.DeathCoil:IsReady(30)
+      and S.DeathAndDecay:CooldownRemains() >= 20
+      and Player:Runes() < 2
+      and not pooling_for_gargoyle then
+
+      return "death_coil [a59f3a03-1c76-471a-b4e6-51387fcf1731]"
+    end
+
+    return false
+  end
+
+  function simc_generic()
+    return false
+  end
+
   function UnholyDK_APL()
     if (not S) or (not I) or (not Settings) or (not HR) or (not HL) or (not Cache) or (not Unit) or (not Player) or (not Target) or (not Spell) or (not Item) or (not HR) or (not Everyone) or (not DeathKnight) or (not Settings.DeathKnight) then
       Initialize()
@@ -292,6 +344,16 @@
       ShouldReturn = simc_cooldowns()
       if ShouldReturn then return ShouldReturn end
       
+      -- run_action_list,name=aoe,if=active_enemies>=2
+      if Cache.EnemiesCount[10] >= 2 then
+        ShouldReturn = simc_aoe()
+        if ShouldReturn then return ShouldReturn end
+      end
+
+      ShouldReturn = simc_generic()
+      if ShouldReturn then return ShouldReturn end
+
+      return "pool"
     end
   end
 
