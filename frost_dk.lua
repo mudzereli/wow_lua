@@ -2,6 +2,8 @@
 
   -- better / auto cd handling?
   -- change is_boss ignore range checks to list of "big mobs" by name?
+  -- dark succor death strike usage when alone
+  -- no death strike in raids
 
 --- ========== HEADER ==========
   
