@@ -4,12 +4,13 @@
   -- change is_boss ignore range checks to list of "big mobs" by name?
   -- dark succor death strike usage when alone
   -- no death strike in raids
+  -- add back in toggles for AOE
 
 --- ========== HEADER ==========
   
-  local FILE_VERSION = 20180919-4
+  local FILE_VERSION = 20180923-1
 
-  WH_FROST_DK_POOLING_FREEZE = false
+  WH_POOLING_FREEZE = false
 
   local addonName, addonTable = ...
   local HL = HeroLib
@@ -551,7 +552,7 @@
       return "frost_strike [1094aa7b-3694-4e7c-a0f3-f8e08aa0fdc0]"
     end
 
-    if WH_FROST_DK_POOLING_FREEZE 
+    if WH_POOLING_FREEZE 
       and (not HR.CDsON())
       and (Player:Runes() >= 3
         or Player:RunicPowerDeficit() < 25) then
@@ -942,7 +943,7 @@
     if ShouldReturn then return ShouldReturn end
 
     -- run_action_list,name=bos_pooling,if=talent.breath_of_sindragosa.enabled&cooldown.breath_of_sindragosa.remains<5
-    if (HR.CDsON() or WH_FROST_DK_POOLING_FREEZE)
+    if (HR.CDsON() or WH_POOLING_FREEZE)
       and talent_enabled("Breath of Sindragosa") 
       and S.BreathofSindragosa:CooldownRemains() < 5 then
         ShouldReturn = simc_bos_pooling()

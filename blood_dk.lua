@@ -2,10 +2,13 @@
 
   -- timed based DS heals
   -- auto cd usage for IBF and AMS
+  -- some better way to pool for bonestorm
   
 --- ========== HEADER ==========
 
-  local FILE_VERSION = 20180919-2
+  local FILE_VERSION = 20180923-3
+
+  WH_POOLING_FREEZE = false
 
   local addonName, addonTable = ...
   local HL = HeroLib
@@ -181,7 +184,7 @@
       -- e8c226f1-97ad-4f27-9849-82454ba6ae1e
       if S.DeathStrike:IsReady()
         and (Target:IsInRange("Melee") or is_boss("target"))
-        and Player:HealthPercentage() < 85 then
+        and Player:HealthPercentage() < 85 and (WH_POOLING_FREEZE and ((not talent_enabled("Bonestorm")) or S.Bonestorm:CooldownRemains() > 5 or (not HR.CDsON())))  then
 
         return "death_strike [e8c226f1-97ad-4f27-9849-82454ba6ae1e]"
       end
@@ -257,7 +260,8 @@
 
       -- bonestorm,if=runic_power>=100&!buff.dancing_rune_weapon.up
       -- f9cd611e-7452-47f4-8853-b31238756a25
-      if S.Bonestorm:IsReady()
+      if S.Bonestorm:IsReady() 
+        and HR.CDsON()
         and (Target:IsInRange("Melee") or is_boss("target"))
         and Player:RunicPower() >= 100
         and (not Player:Buff(S.DancingRuneWeaponBuff)) then
