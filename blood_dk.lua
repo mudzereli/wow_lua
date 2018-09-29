@@ -6,7 +6,7 @@
   
 --- ========== HEADER ==========
 
-  local FILE_VERSION = 20180923-3
+  local FILE_VERSION = 20180924-1
 
   WH_POOLING_FREEZE = false
 
@@ -184,7 +184,7 @@
       -- e8c226f1-97ad-4f27-9849-82454ba6ae1e
       if S.DeathStrike:IsReady()
         and (Target:IsInRange("Melee") or is_boss("target"))
-        and Player:HealthPercentage() < 85 and (WH_POOLING_FREEZE and ((not talent_enabled("Bonestorm")) or S.Bonestorm:CooldownRemains() > 5 or (not HR.CDsON())))  then
+        and Player:HealthPercentage() < 85 and ((not WH_POOLING_FREEZE) or (talent_enabled("Bonestorm") and S.Bonestorm:CooldownRemains() > 5))  then
 
         return "death_strike [e8c226f1-97ad-4f27-9849-82454ba6ae1e]"
       end
