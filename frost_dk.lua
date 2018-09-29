@@ -224,6 +224,7 @@
 
 --- ========== CONVERTED ACTION LIST ==========
 
+  -- validated 9/29/2018
   local function simc_standard()
     -- remorseless_winter
     -- 40dd79f0-f639-4512-a3e7-3c1a11f4c7f8
