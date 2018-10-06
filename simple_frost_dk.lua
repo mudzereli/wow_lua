@@ -8,7 +8,7 @@
 
 --- ========== HEADER ==========
   
-  local FILE_VERSION = 20180923-1
+  local FILE_VERSION = 20181006-1
 
   WH_POOLING_FREEZE = false
 
@@ -120,132 +120,10 @@
     return (Settings.General.SoloMode and Player:HealthPercentage() < Settings.DeathKnight.Commons.UseDeathStrikeHP) and true or false
   end
 
---- ========== SIMCRAFT PRIORITY LIST ==========
-
--- # # Executed before combat begins. Accepts non-harmful actions only.
--- x actions.precombat=flask
--- x actions.precombat+=/food
--- x actions.precombat+=/augmentation
--- # # Snapshot raid buffed stats before combat begins and pre-potting is done.
--- x actions.precombat+=/snapshot_stats
--- x actions.precombat+=/potion
-
--- # # Executed every time the actor is available.
--- x actions=auto_attack
-
--- # # Apply Frost Fever and maintain Icy Talons
--- * actions+=/howling_blast,if=!dot.frost_fever.ticking&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
--- * actions+=/glacial_advance,if=buff.icy_talons.remains<=gcd&buff.icy_talons.up&spell_targets.glacial_advance>=2&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
--- * actions+=/frost_strike,if=buff.icy_talons.remains<=gcd&buff.icy_talons.up&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
--- * actions+=/call_action_list,name=cooldowns
--- * actions+=/run_action_list,name=bos_pooling,if=talent.breath_of_sindragosa.enabled&cooldown.breath_of_sindragosa.remains<5
--- * actions+=/run_action_list,name=bos_ticking,if=dot.breath_of_sindragosa.ticking
--- * actions+=/run_action_list,name=obliteration,if=buff.pillar_of_frost.up&talent.obliteration.enabled
--- * actions+=/run_action_list,name=aoe,if=active_enemies>=2
--- * actions+=/call_action_list,name=standard
-
--- R actions.aoe=remorseless_winter,if=talent.gathering_storm.enabled|(azerite.frozen_tempest.rank&spell_targets.remorseless_winter>=3&!buff.rime.up)
--- * actions.aoe+=/glacial_advance,if=talent.frostscythe.enabled
--- - actions.aoe+=/frost_strike,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&cooldown.remorseless_winter.remains<=2*gcd&talent.gathering_storm.enabled&!talent.frostscythe.enabled
--- * actions.aoe+=/frost_strike,if=cooldown.remorseless_winter.remains<=2*gcd&talent.gathering_storm.enabled
--- * actions.aoe+=/howling_blast,if=buff.rime.up
--- * actions.aoe+=/frostscythe,if=buff.killing_machine.up
--- * actions.aoe+=/glacial_advance,if=runic_power.deficit<(15+talent.runic_attenuation.enabled*3)
--- - actions.aoe+=/frost_strike,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&runic_power.deficit<(15+talent.runic_attenuation.enabled*3)&!talent.frostscythe.enabled
--- * actions.aoe+=/frost_strike,if=runic_power.deficit<(15+talent.runic_attenuation.enabled*3)
--- * actions.aoe+=/remorseless_winter
--- * actions.aoe+=/frostscythe
--- - actions.aoe+=/obliterate,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&runic_power.deficit>(25+talent.runic_attenuation.enabled*3)&!talent.frostscythe.enabled
--- * actions.aoe+=/obliterate,if=runic_power.deficit>(25+talent.runic_attenuation.enabled*3)
--- * actions.aoe+=/glacial_advance
--- - actions.aoe+=/frost_strike,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&!talent.frostscythe.enabled
--- * actions.aoe+=/frost_strike
--- * actions.aoe+=/horn_of_winter
--- x actions.aoe+=/arcane_torrent
-
--- # # Breath of Sindragosa pooling rotation : starts 20s before Pillar of Frost + BoS are available
--- * actions.bos_pooling=howling_blast,if=buff.rime.up
--- - actions.bos_pooling+=/obliterate,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&rune.time_to_4<gcd&runic_power.deficit>=25&!talent.frostscythe.enabled
--- * actions.bos_pooling+=/obliterate,if=rune.time_to_4<gcd&runic_power.deficit>=25
--- * actions.bos_pooling+=/glacial_advance,if=runic_power.deficit<20&cooldown.pillar_of_frost.remains>rune.time_to_4&spell_targets.glacial_advance>=2
--- - actions.bos_pooling+=/frost_strike,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&runic_power.deficit<20&cooldown.pillar_of_frost.remains>rune.time_to_4&!talent.frostscythe.enabled
--- * actions.bos_pooling+=/frost_strike,if=runic_power.deficit<20&cooldown.pillar_of_frost.remains>rune.time_to_4
--- * actions.bos_pooling+=/frostscythe,if=buff.killing_machine.up&runic_power.deficit>(15+talent.runic_attenuation.enabled*3)&spell_targets.frostscythe>=2
--- * actions.bos_pooling+=/frostscythe,if=runic_power.deficit>=(35+talent.runic_attenuation.enabled*3)&spell_targets.frostscythe>=2
--- - actions.bos_pooling+=/obliterate,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&runic_power.deficit>=(35+talent.runic_attenuation.enabled*3)&!talent.frostscythe.enabled
--- * actions.bos_pooling+=/obliterate,if=runic_power.deficit>=(35+talent.runic_attenuation.enabled*3)
--- * actions.bos_pooling+=/glacial_advance,if=cooldown.pillar_of_frost.remains>rune.time_to_4&runic_power.deficit<40&spell_targets.glacial_advance>=2
--- - actions.bos_pooling+=/frost_strike,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&cooldown.pillar_of_frost.remains>rune.time_to_4&runic_power.deficit<40&!talent.frostscythe.enabled
--- * actions.bos_pooling+=/frost_strike,if=cooldown.pillar_of_frost.remains>rune.time_to_4&runic_power.deficit<40
- 
--- - actions.bos_ticking=obliterate,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&runic_power<=30&!talent.frostscythe.enabled
--- * actions.bos_ticking+=/obliterate,if=runic_power<=30
--- * actions.bos_ticking+=/remorseless_winter,if=talent.gathering_storm.enabled
--- * actions.bos_ticking+=/howling_blast,if=buff.rime.up
--- - actions.bos_ticking+=/obliterate,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&rune.time_to_5<gcd|runic_power<=45&!talent.frostscythe.enabled
--- * actions.bos_ticking+=/obliterate,if=rune.time_to_5<gcd|runic_power<=45
--- * actions.bos_ticking+=/frostscythe,if=buff.killing_machine.up&spell_targets.frostscythe>=2
--- * actions.bos_ticking+=/horn_of_winter,if=runic_power.deficit>=30&rune.time_to_3>gcd
--- * actions.bos_ticking+=/remorseless_winter
--- * actions.bos_ticking+=/frostscythe,if=spell_targets.frostscythe>=2
--- - actions.bos_ticking+=/obliterate,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&runic_power.deficit>25|rune>3&!talent.frostscythe.enabled
--- * actions.bos_ticking+=/obliterate,if=runic_power.deficit>25|rune>3
--- x actions.bos_ticking+=/arcane_torrent,if=runic_power.deficit>20
- 
--- # # Cold heart conditions
--- * actions.cold_heart=chains_of_ice,if=buff.cold_heart.stack>5&target.time_to_die<gcd
--- * actions.cold_heart+=/chains_of_ice,if=(buff.pillar_of_frost.remains<=gcd*(1+cooldown.frostwyrms_fury.ready)|buff.pillar_of_frost.remains<rune.time_to_3)&buff.pillar_of_frost.up
-
--- x actions.cooldowns=use_items,if=(cooldown.pillar_of_frost.ready|cooldown.pillar_of_frost.remains>20)&(!talent.breath_of_sindragosa.enabled|cooldown.empower_rune_weapon.remains>95)
--- x actions.cooldowns+=/use_item,name=razdunks_big_red_button
--- x actions.cooldowns+=/use_item,name=merekthas_fang,if=!dot.breath_of_sindragosa.ticking&!buff.pillar_of_frost.up
--- * actions.cooldowns+=/potion,if=buff.pillar_of_frost.up&buff.empower_rune_weapon.up
--- x actions.cooldowns+=/blood_fury,if=buff.pillar_of_frost.up&buff.empower_rune_weapon.up
--- x actions.cooldowns+=/berserking,if=buff.pillar_of_frost.up
--- # # Frost cooldowns
--- * actions.cooldowns+=/pillar_of_frost,if=cooldown.empower_rune_weapon.remains
--- * actions.cooldowns+=/breath_of_sindragosa,if=cooldown.empower_rune_weapon.remains&cooldown.pillar_of_frost.remains
--- * actions.cooldowns+=/empower_rune_weapon,if=cooldown.pillar_of_frost.ready&!talent.breath_of_sindragosa.enabled&rune.time_to_5>gcd&runic_power.deficit>=10
--- * actions.cooldowns+=/empower_rune_weapon,if=cooldown.pillar_of_frost.ready&talent.breath_of_sindragosa.enabled&rune>=3&runic_power>60
--- * actions.cooldowns+=/call_action_list,name=cold_heart,if=talent.cold_heart.enabled&((buff.cold_heart.stack>=10&debuff.razorice.stack=5)|target.time_to_die<=gcd)
--- x actions.cooldowns+=/frostwyrms_fury,if=buff.pillar_of_frost.remains<=gcd&buff.pillar_of_frost.up
-
--- # # Obliteration rotation
--- * actions.obliteration=remorseless_winter,if=talent.gathering_storm.enabled
--- - actions.obliteration+=/obliterate,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&!talent.frostscythe.enabled&!buff.rime.up&spell_targets.howling_blast>=3
--- * actions.obliteration+=/obliterate,if=!talent.frostscythe.enabled&!buff.rime.up&spell_targets.howling_blast>=3
--- * actions.obliteration+=/frostscythe,if=(buff.killing_machine.react|(buff.killing_machine.up&(prev_gcd.1.frost_strike|prev_gcd.1.howling_blast|prev_gcd.1.glacial_advance)))&spell_targets.frostscythe>=2
--- - actions.obliteration+=/obliterate,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&buff.killing_machine.react|(buff.killing_machine.up&(prev_gcd.1.frost_strike|prev_gcd.1.howling_blast|prev_gcd.1.glacial_advance))
--- * actions.obliteration+=/obliterate,if=buff.killing_machine.react|(buff.killing_machine.up&(prev_gcd.1.frost_strike|prev_gcd.1.howling_blast|prev_gcd.1.glacial_advance))
--- * actions.obliteration+=/glacial_advance,if=(!buff.rime.up|runic_power.deficit<10|rune.time_to_2>gcd)&spell_targets.glacial_advance>=2
--- * actions.obliteration+=/howling_blast,if=buff.rime.up&spell_targets.howling_blast>=2
--- - actions.obliteration+=/frost_strike,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&!buff.rime.up|runic_power.deficit<10|rune.time_to_2>gcd&!talent.frostscythe.enabled
--- * actions.obliteration+=/frost_strike,if=!buff.rime.up|runic_power.deficit<10|rune.time_to_2>gcd
--- * actions.obliteration+=/howling_blast,if=buff.rime.up
--- - actions.obliteration+=/obliterate,target_if=(debuff.razorice.stack<5|debuff.razorice.remains<10)&!talent.frostscythe.enabled
--- * actions.obliteration+=/obliterate
-
--- # # Standard single-target rotation
--- * actions.standard=remorseless_winter
--- * actions.standard+=/frost_strike,if=cooldown.remorseless_winter.remains<=2*gcd&talent.gathering_storm.enabled
--- * actions.standard+=/howling_blast,if=buff.rime.up
--- * actions.standard+=/obliterate,if=!buff.frozen_pulse.up&talent.frozen_pulse.enabled
--- * actions.standard+=/frost_strike,if=runic_power.deficit<(15+talent.runic_attenuation.enabled*3)
--- * actions.standard+=/frostscythe,if=buff.killing_machine.up&rune.time_to_4>=gcd
--- * actions.standard+=/obliterate,if=runic_power.deficit>(25+talent.runic_attenuation.enabled*3)
--- * actions.standard+=/frost_strike
--- * actions.standard+=/horn_of_winter
--- x actions.standard+=/arcane_torrent
-
 --- ========== CONVERTED ACTION LIST ==========
 
   -- validated 9/29/2018
   local function simc_standard()
-    -- remorseless_winter
-    -- 40dd79f0-f639-4512-a3e7-3c1a11f4c7f8
-    if S.RemorselessWinter:IsCastable() then
-      return "remorseless_winter [40dd79f0-f639-4512-a3e7-3c1a11f4c7f8]"
-    end
 
     -- frost_strike,if=cooldown.remorseless_winter.remains<=2*gcd&talent.gathering_storm.enabled
     -- cb4a28f5-821e-4fde-9707-3a3450c2e151
@@ -408,7 +286,9 @@
 
     -- remorseless_winter
     -- d8c0f089-0893-42b8-8561-29ef71b56af1
-    if S.RemorselessWinter:IsCastable() then
+    if S.RemorselessWinter:IsCastable()
+      and talent_enabled("Gathering Storm")
+      and Cache.EnemiesCount[8] >= 1 then
 
       return "remorseless_winter [d8c0f089-0893-42b8-8561-29ef71b56af1]"
     end
@@ -907,6 +787,32 @@
     -- ff10ee71-e294-46c0-8c39-f5212edb6ea7
     if Everyone.TargetIsValid() and ShouldDeathStrike() and S.DeathStrike:IsReady() then
         return "death_strike [ff10ee71-e294-46c0-8c39-f5212edb6ea7]"
+    end
+
+    -- Use Chains of Ice, if you have 20 stacks (try to use at the end of Pillar of Frost when the strength bonus is at the highest).
+    -- 0374895e-8392-44b0-935d-933a17d56bd3
+    if S.ChainsOfIce:IsReady(30) 
+      and Everyone.TargetIsValid()
+      and Player:BuffStack(S.ColdHeartBuff) >= 20 then
+
+      return "chains_of_ice [0374895e-8392-44b0-935d-933a17d56bd3]"
+    end
+
+    -- Use Remorseless Winter, if using Gathering Storm.
+    -- 122e32ba-2cf4-4466-af9d-8c303db20474
+    if S.RemorselessWinter:IsCastable()
+      and talent_enabled("Gathering Storm") 
+      and Cache.EnemiesCount[8] >= 1 then
+      return "remorseless_winter [122e32ba-2cf4-4466-af9d-8c303db20474]"
+    end
+
+    -- Use Howling Blast, only if you have a Rime proc.
+    -- 8da88256-bedd-409b-87dc-5f27b05220fa
+    if S.HowlingBlast:IsReady(30)
+      and Everyone.TargetIsValid()
+      and Player:Buff(S.Rime) then
+
+      return "howling_blast [8da88256-bedd-409b-87dc-5f27b05220fa]"
     end
 
     -- howling_blast,if=!dot.frost_fever.ticking&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
