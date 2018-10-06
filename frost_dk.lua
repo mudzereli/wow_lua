@@ -8,7 +8,7 @@
 
 --- ========== HEADER ==========
   
-  local FILE_VERSION = 20181006-1
+  local FILE_VERSION = 20181006-2
 
   WH_POOLING_FREEZE = false
 
