@@ -2,13 +2,13 @@
 
   -- better / auto cd handling?
   -- change is_boss ignore range checks to list of "big mobs" by name?
-  -- dark succor death strike usage when alone
-  -- no death strike in raids
+  -- * dark succor death strike usage when alone
+  -- * no death strike in raids
   -- add back in toggles for AOE
-
+  -- interrupt at END of most casts -- exception lists for some?
 --- ========== HEADER ==========
   
-  local FILE_VERSION = 20181006-2
+  local FILE_VERSION = 20181020-1
 
   WH_POOLING_FREEZE = false
 
@@ -82,6 +82,7 @@
       ColdHeart                     = Spell(281208),
       ColdHeartBuff                 = Spell(281209),
       FrostwyrmsFury                = Spell(279302),
+      DarkSuccor                    = Spell(101568),
       -- Defensive
       AntiMagicShell                = Spell(48707),
       DeathStrike                   = Spell(49998),
@@ -117,7 +118,9 @@
 --- ========== HELPER FUNCTIONS ==========
 
   local function ShouldDeathStrike()
-    return (Settings.General.SoloMode and Player:HealthPercentage() < Settings.DeathKnight.Commons.UseDeathStrikeHP) and true or false
+    return ((Settings.General.SoloMode and Player:HealthPercentage() < Settings.DeathKnight.Commons.UseDeathStrikeHP)
+      or (Player:Buff(S.DarkSuccor) and Player:HealthPercentage() < 75))
+      and alone()
   end
 
 --- ========== SIMCRAFT PRIORITY LIST ==========
@@ -138,7 +141,8 @@
 -- * actions+=/glacial_advance,if=buff.icy_talons.remains<=gcd&buff.icy_talons.up&spell_targets.glacial_advance>=2&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
 -- * actions+=/frost_strike,if=buff.icy_talons.remains<=gcd&buff.icy_talons.up&(!talent.breath_of_sindragosa.enabled|cooldown.breath_of_sindragosa.remains>15)
 -- * actions+=/call_action_list,name=cooldowns
--- * actions+=/run_action_list,name=bos_pooling,if=talent.breath_of_sindragosa.enabled&cooldown.breath_of_sindragosa.remains<5
+-- R actions+=/run_action_list,name=bos_pooling,if=talent.breath_of_sindragosa.enabled&cooldown.breath_of_sindragosa.remains<5
+-- * actions+=/run_action_list,name=bos_pooling,if=talent.breath_of_sindragosa.enabled&(cooldown.breath_of_sindragosa.remains<5|(cooldown.breath_of_sindragosa.remains<20&target.time_to_die<35))
 -- * actions+=/run_action_list,name=bos_ticking,if=dot.breath_of_sindragosa.ticking
 -- * actions+=/run_action_list,name=obliteration,if=buff.pillar_of_frost.up&talent.obliteration.enabled
 -- * actions+=/run_action_list,name=aoe,if=active_enemies>=2
@@ -195,6 +199,7 @@
 -- # # Cold heart conditions
 -- * actions.cold_heart=chains_of_ice,if=buff.cold_heart.stack>5&target.time_to_die<gcd
 -- * actions.cold_heart+=/chains_of_ice,if=(buff.pillar_of_frost.remains<=gcd*(1+cooldown.frostwyrms_fury.ready)|buff.pillar_of_frost.remains<rune.time_to_3)&buff.pillar_of_frost.up
+-- * actions.cold_heart+=/chains_of_ice,if=buff.pillar_of_frost.remains<8&buff.unholy_strength.remains<gcd*(1+cooldown.frostwyrms_fury.ready)&buff.unholy_strength.remains&buff.pillar_of_frost.up
 
 -- x actions.cooldowns=use_items,if=(cooldown.pillar_of_frost.ready|cooldown.pillar_of_frost.remains>20)&(!talent.breath_of_sindragosa.enabled|cooldown.empower_rune_weapon.remains>95)
 -- x actions.cooldowns+=/use_item,name=razdunks_big_red_button
@@ -205,10 +210,12 @@
 -- # # Frost cooldowns
 -- * actions.cooldowns+=/pillar_of_frost,if=cooldown.empower_rune_weapon.remains
 -- * actions.cooldowns+=/breath_of_sindragosa,if=cooldown.empower_rune_weapon.remains&cooldown.pillar_of_frost.remains
--- * actions.cooldowns+=/empower_rune_weapon,if=cooldown.pillar_of_frost.ready&!talent.breath_of_sindragosa.enabled&rune.time_to_5>gcd&runic_power.deficit>=10
--- * actions.cooldowns+=/empower_rune_weapon,if=cooldown.pillar_of_frost.ready&talent.breath_of_sindragosa.enabled&rune>=3&runic_power>60
+-- * actions.cooldowns+=/empower_rune_weapon,if=cooldown.pillar_of_frost.ready&!talent.breath_of_sindragosa.enabled&rune.time_to_5>gcd&runic_power.deficit>=10|target.time_to_die<20
+-- * actions.cooldowns+=/empower_rune_weapon,if=(cooldown.pillar_of_frost.ready|target.time_to_die<20)&talent.breath_of_sindragosa.enabled&rune>=3&runic_power>60
 -- * actions.cooldowns+=/call_action_list,name=cold_heart,if=talent.cold_heart.enabled&((buff.cold_heart.stack>=10&debuff.razorice.stack=5)|target.time_to_die<=gcd)
--- x actions.cooldowns+=/frostwyrms_fury,if=buff.pillar_of_frost.remains<=gcd&buff.pillar_of_frost.up
+-- x actions.cooldowns+=/frostwyrms_fury,if=(buff.pillar_of_frost.remains<=gcd|(buff.pillar_of_frost.remains<8&buff.unholy_strength.remains<=gcd&buff.unholy_strength.up))&buff.pillar_of_frost.up
+-- x actions.cooldowns+=/frostwyrms_fury,if=target.time_to_die<gcd|(target.time_to_die<cooldown.pillar_of_frost.remains&buff.unholy_strength.up)
+
 
 -- # # Obliteration rotation
 -- * actions.obliteration=remorseless_winter,if=talent.gathering_storm.enabled
@@ -807,27 +814,30 @@
       return "breath_of_sindragosa [fb3a9ecf-d010-4885-9f72-6f8db764e83b]"
     end
 
-    -- empower_rune_weapon,if=cooldown.pillar_of_frost.ready&!talent.breath_of_sindragosa.enabled&rune.time_to_5>gcd&runic_power.deficit>=10
+    -- empower_rune_weapon,if=cooldown.pillar_of_frost.ready&!talent.breath_of_sindragosa.enabled&rune.time_to_5>gcd&runic_power.deficit>=10|target.time_to_die<20
     -- 8cb9f142-310f-40af-b92b-b16a5f685695
-    if HR.CDsON() 
+    if (HR.CDsON() 
       and Everyone.TargetIsValid()
       and Target:IsInRange(15)
       and S.EmpowerRuneWeapon:IsCastable() 
       and S.PillarOfFrost:CooldownUp() 
       and (not talent_enabled("Breath of Sindragosa"))
       and Player:RuneTimeToX(5) > Player:GCD() 
-      and Player:RunicPowerDeficit() >= 10 then
+      and Player:RunicPowerDeficit() >= 10)
+        or (is_boss("target") 
+      and Target:FilteredTimeToDie("<",20)) then
 
       return "empower_rune_weapon [8cb9f142-310f-40af-b92b-b16a5f685695]"
     end
 
-    -- empower_rune_weapon,if=cooldown.pillar_of_frost.ready&talent.breath_of_sindragosa.enabled&rune>=3&runic_power>60
+    -- empower_rune_weapon,if=(cooldown.pillar_of_frost.ready|target.time_to_die<20)&talent.breath_of_sindragosa.enabled&rune>=3&runic_power>60
     -- b0a97ff0-e8b2-4715-a16e-7b2392933228
     if HR.CDsON() 
       and Everyone.TargetIsValid()
       and Target:IsInRange(15)
       and S.EmpowerRuneWeapon:IsCastable() 
-      and S.PillarOfFrost:CooldownUp()
+      and (S.PillarOfFrost:CooldownUp()
+        or (is_boss("target") and Target:FilteredTimeToDie("<",20)))
       and talent_enabled("Breath of Sindragosa")
       and Player:Runes() >= 3 
       and Player:RunicPower() > 60 then
@@ -860,7 +870,20 @@
           or Player:BuffRemains(S.PillarOfFrost) < Player:RuneTimeToX(3)) then
         return "chains_of_ice [5434b084-bb4c-4bb1-bbfb-2e2ee2b843bc]"
       end
+
+      -- chains_of_ice,if=buff.pillar_of_frost.remains<8&buff.unholy_strength.remains<gcd*(1+cooldown.frostwyrms_fury.ready)&buff.unholy_strength.remains&buff.pillar_of_frost.up
+      -- 79eeafed-b68b-41b2-a62d-669236a43d8f
+      if S.ChainsOfIce:IsReady(30) 
+        and Everyone.TargetIsValid()
+        and Player:Buff(S.UnholyStrength)
+        and Player:Buff(S.PillarOfFrost)
+        and Player:BuffRemains(S.PillarOfFrost) < 8
+        and Player:BuffRemains(S.UnholyStrength) < Player:GCD() * (1 + binarize(S.FrostwyrmsFury:CooldownUp())) then
+
+        return "chains_of_ice [79eeafed-b68b-41b2-a62d-669236a43d8f]"
+      end
     end
+
 
     -- frostwyrms_fury,if=buff.pillar_of_frost.remains<=gcd&buff.pillar_of_frost.up
     -- 2a41ac90-7c23-4afc-8fb3-3b908ac14190
@@ -958,10 +981,14 @@
     ShouldReturn = simc_cooldowns()
     if ShouldReturn then return ShouldReturn end
 
-    -- run_action_list,name=bos_pooling,if=talent.breath_of_sindragosa.enabled&cooldown.breath_of_sindragosa.remains<5
+    -- OLD = run_action_list,name=bos_pooling,if=talent.breath_of_sindragosa.enabled&cooldown.breath_of_sindragosa.remains<5
+    -- run_action_list,name=bos_pooling,if=talent.breath_of_sindragosa.enabled&(cooldown.breath_of_sindragosa.remains<5|(cooldown.breath_of_sindragosa.remains<20&target.time_to_die<35))
     if (HR.CDsON() or WH_POOLING_FREEZE)
       and talent_enabled("Breath of Sindragosa") 
-      and S.BreathofSindragosa:CooldownRemains() < 5 then
+      and (S.BreathofSindragosa:CooldownRemains() < 5
+        or (is_boss("target")
+          and S.BreathofSindragosa:CooldownRemains() < 20
+          and Target:FilteredTimeToDie("<",35))) then
         ShouldReturn = simc_bos_pooling()
         if ShouldReturn then return ShouldReturn end
         return "bos_pooling"

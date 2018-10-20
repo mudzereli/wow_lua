@@ -6,7 +6,7 @@
 
 --- ========== HEADER ==========
 
-  local FILE_VERSION = 20180920-3
+  local FILE_VERSION = 20181020-1
 
   local addonName, addonTable = ...;
   local HL = HeroLib;
@@ -120,7 +120,7 @@
   -- x actions=auto_attack
   -- x actions+=/variable,name=pooling_for_gargoyle,value=cooldown.summon_gargoyle.remains<5&talent.summon_gargoyle.enabled
   -- # # Racials, Items, and other ogcds
-  -- x actions+=/arcane_torrent,if=runic_power.deficit>65&(pet.gargoyle.active|!talent.summon_gargoyle.enabled)&rune.deficit>=5
+  -- x actions+=/arcane_torrent,if=runic_power.deficit>65&(cooldown.summon_gargoyle.remains|!talent.summon_gargoyle.enabled)&rune.deficit>=5
   -- x actions+=/blood_fury,if=pet.gargoyle.active|!talent.summon_gargoyle.enabled
   -- x actions+=/berserking,if=pet.gargoyle.active|!talent.summon_gargoyle.enabled
   -- # # Custom trinkets usage
@@ -160,7 +160,9 @@
   -- * actions.cooldowns+=/summon_gargoyle,if=runic_power.deficit<14
   -- * actions.cooldowns+=/unholy_frenzy,if=debuff.festering_wound.stack<4
   -- * actions.cooldowns+=/unholy_frenzy,if=active_enemies>=2&((cooldown.death_and_decay.remains<=gcd&!talent.defile.enabled)|(cooldown.defile.remains<=gcd&talent.defile.enabled))
-  -- * actions.cooldowns+=/soul_reaper,target_if=(target.time_to_die<8|rune<=2)&!buff.unholy_frenzy.up
+  -- * actions.cooldowns+=/soul_reaper,target_if=target.time_to_die<8&target.time_to_die>4
+  -- * actions.cooldowns+=/soul_reaper,if=(!raid_event.adds.exists|raid_event.adds.in>20)&rune<=(1-buff.unholy_frenzy.up)
+  -- # can't add logic for raid adds above so just used rest of criteria
   -- * actions.cooldowns+=/unholy_blight
 
   -- * actions.generic=death_coil,if=buff.sudden_doom.react&!variable.pooling_for_gargoyle|pet.gargoyle.active
@@ -241,13 +243,22 @@
       return "unholy_frenzy [ddb5edbd-e36b-4183-a26e-d35af9b1b016]"
     end
 
-    -- soul_reaper,target_if=(target.time_to_die<8|rune<=2)&!buff.unholy_frenzy.up
+
+    -- soul_reaper,target_if=target.time_to_die<8&target.time_to_die>4
+    -- 2452193a-8937-4cc9-993b-22c8b09a91e3
+    if talent_enabled("Soul Reaper")
+      and S.SoulReaper:IsReady("Melee")
+      and Target:FilteredTimeToDie("<",8)
+      and Target:FilteredTimeToDie(">",4) then
+
+      return "soul_reaper [2452193a-8937-4cc9-993b-22c8b09a91e3]"
+    end
+
+    -- soul_reaper,if=(!raid_event.adds.exists|raid_event.adds.in>20)&rune<=(1-buff.unholy_frenzy.up)
     -- a76c1952-8a73-4397-941f-0d6781f62617
     if talent_enabled("Soul Reaper")
       and S.SoulReaper:IsReady("Melee")
-      and (not Player:Buff(S.UnholyFrenzy))
-      and (Target:FilteredTimeToDie("<",8)
-        or Player:Runes() <= 2) then
+      and Player:Runes() <= (1 - binarize(Player:Buff(S.UnholyFrenzy))) then
 
       return "soul_reaper [a76c1952-8a73-4397-941f-0d6781f62617]"
     end
