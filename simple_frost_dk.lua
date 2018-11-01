@@ -7,7 +7,7 @@
 
 --- ========== HEADER ==========
   
-  local FILE_VERSION = 20181029-1
+  local FILE_VERSION = 20181029-3
 
   local addonName, addonTable = ...
   local HL = HeroLib
@@ -134,11 +134,11 @@
 -- * actions+=/obliterate,if=variable.bos_ticking&runic_power<=30
 -- * actions+=/frost_strike,if=!variable.bos_ticking&(runic_power>=110|(!variable.use_cooldowns&runic_power.deficit<=25))
 -- * actions+=/howling_blast,if=!dot.frost_fever.ticking
--- * actions+=/chains_of_ice,if=target.time_to_die<3|buff.cold_heart.stack>=15
+-- * actions+=/chains_of_ice,if=!variable.bos_ticking&(target.time_to_die<3|buff.cold_heart.stack>=15)
 -- * actions+=/obliterate,if=variable.bos_ticking&runic_power.deficit>=25
 -- * actions+=/obliterate,if=variable.bos_pooling&(rune>=3|runic_power.deficit>=25)
 -- * actions+=/obliterate,if=!variable.bos_ticking&!variable.bos_pooling
--- * actions+=/remorseless_winter
+-- * actions+=/remorseless_winter,if=!variable.bos_pooling
 -- * actions+=/frost_strike,if=!variable.bos_ticking&!variable.bos_pooling
 
 --- ========== CONVERTED ACTION LIST ==========
@@ -255,10 +255,11 @@
       return "howling_blast [d041b15d-cae4-4c21-a394-d82b046d2bba]"
     end
 
-    -- chains_of_ice,if=target.time_to_die<3|buff.cold_heart.stack>=15
+    -- chains_of_ice,if=!variable.bos_ticking&(target.time_to_die<3|buff.cold_heart.stack>=15)
     -- 136ab978-d120-4a4a-a8a8-49180174ee69
     if S.ChainsOfIce:IsReady(30) 
       and Everyone.TargetIsValid()
+      and not bos_ticking
       and ((is_boss("target") and Target:FilteredTimeToDie("<",3))
         or Player:BuffStack(S.ColdHeartBuff) >= 15) then
 
@@ -299,9 +300,10 @@
       return "obliterate [5ef0f08c-f9de-4d33-b693-3adff75a18a5]"
     end
 
-    -- remorseless_winter
+    -- remorseless_winter,if=!variable.bos_pooling
     -- 40dd79f0-f639-4512-a3e7-3c1a11f4c7f8
-    if S.RemorselessWinter:IsCastable() then
+    if S.RemorselessWinter:IsCastable()
+      and not bos_pooling then
 
       return "remorseless_winter [40dd79f0-f639-4512-a3e7-3c1a11f4c7f8]"
     end
