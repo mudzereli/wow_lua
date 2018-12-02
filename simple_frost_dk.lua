@@ -1,13 +1,11 @@
 --- ========== TODO ==========
 
-  -- better / auto cd handling?
   -- change is_boss ignore range checks to list of "big mobs" by name?
-  -- add back in toggles for AOE
   -- interrupt at END of most casts -- exception lists for some?
 
 --- ========== HEADER ==========
   
-  local FILE_VERSION = 20181029-3
+  local FILE_VERSION = 20181111-1
 
   local addonName, addonTable = ...
   local HL = HeroLib
@@ -124,6 +122,7 @@
 
 -- x actions=auto_attack
 -- * actions+=/variable,name=use_cooldowns,value=1
+-- * actions+=/variable,name=use_aoe,value=1
 -- * actions+=/variable,name=bos_ticking,value=dot.breath_of_sindragosa.ticking
 -- * actions+=/variable,name=bos_pooling,value=talent.breath_of_sindragosa.enabled&cooldown.breath_of_sindragosa.remains<5&variable.use_cooldowns&!variable.bos_ticking
 -- * actions+=/pillar_of_frost,if=cooldown.empower_rune_weapon.remains>0|!variable.use_cooldowns
@@ -133,12 +132,12 @@
 -- * actions+=/howling_blast,if=buff.rime.up
 -- * actions+=/obliterate,if=variable.bos_ticking&runic_power<=30
 -- * actions+=/frost_strike,if=!variable.bos_ticking&(runic_power>=110|(!variable.use_cooldowns&runic_power.deficit<=25))
--- * actions+=/howling_blast,if=!dot.frost_fever.ticking
+-- * actions+=/howling_blast,if=!dot.frost_fever.ticking&variable.use_aoe
 -- * actions+=/chains_of_ice,if=!variable.bos_ticking&(target.time_to_die<3|buff.cold_heart.stack>=15)
 -- * actions+=/obliterate,if=variable.bos_ticking&runic_power.deficit>=25
 -- * actions+=/obliterate,if=variable.bos_pooling&(rune>=3|runic_power.deficit>=25)
 -- * actions+=/obliterate,if=!variable.bos_ticking&!variable.bos_pooling
--- * actions+=/remorseless_winter,if=!variable.bos_pooling
+-- * actions+=/remorseless_winter,if=!variable.bos_pooling&variable.use_aoe
 -- * actions+=/frost_strike,if=!variable.bos_ticking&!variable.bos_pooling
 
 --- ========== CONVERTED ACTION LIST ==========
@@ -151,6 +150,9 @@
 
     -- variable,name=use_cooldowns,value=1
     local use_cooldowns = HR.CDsON()
+
+    -- variable,name=use_aoe,value=1
+    local use_aoe = HR.AoEON()
 
     -- variable,name=bos_ticking,value=dot.breath_of_sindragosa.ticking
     local bos_ticking = Player:Buff(S.BreathofSindragosa)
@@ -173,7 +175,7 @@
     -- added extra code to handle CD variables
     if S.PillarOfFrost:IsCastable() 
       and Everyone.TargetIsValid()
-      and (S.EmpowerRuneWeapon:CooldownDown() or not HR.CDsON()) then
+      and (S.EmpowerRuneWeapon:CooldownDown() or not use_cooldowns) then
 
       return "pillar_of_frost [2e7b5ff3-a86d-4864-9b88-a0ca1fe69882]"
     end
@@ -246,11 +248,12 @@
       return "frost_strike [2d3a06a3-0e05-4cd9-a9c1-b31cf70b4c06]"
     end
 
-    -- howling_blast,if=!dot.frost_fever.ticking
+    -- howling_blast,if=!dot.frost_fever.ticking&variable.use_aoe
     -- d041b15d-cae4-4c21-a394-d82b046d2bba
     if S.HowlingBlast:IsReady(30)
       and Everyone.TargetIsValid()
-      and not Target:Debuff(S.FrostFever) then
+      and not Target:Debuff(S.FrostFever)
+      and use_aoe then
 
       return "howling_blast [d041b15d-cae4-4c21-a394-d82b046d2bba]"
     end
@@ -300,10 +303,11 @@
       return "obliterate [5ef0f08c-f9de-4d33-b693-3adff75a18a5]"
     end
 
-    -- remorseless_winter,if=!variable.bos_pooling
+    -- remorseless_winter,if=!variable.bos_pooling&variable.use_aoe
     -- 40dd79f0-f639-4512-a3e7-3c1a11f4c7f8
     if S.RemorselessWinter:IsCastable()
-      and not bos_pooling then
+      and not bos_pooling 
+      and use_aoe then
 
       return "remorseless_winter [40dd79f0-f639-4512-a3e7-3c1a11f4c7f8]"
     end

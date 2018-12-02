@@ -7,7 +7,7 @@
 
 --- ========== HEADER ==========
   
-  local FILE_VERSION = 20181101-1
+  local FILE_VERSION = 20181103-1
 
   local addonName, addonTable = ...
   local HL = HeroLib
@@ -118,12 +118,12 @@
 --- ========== HELPER FUNCTIONS ==========
 
   local function ShouldCrimsonVial()
-    return (Settings.General.SoloMode and Player:HealthPercentage() < 35)
-      and alone()
+    return S.CrimsonVial:IsReady() and Player:HealthPercentage() < 75 and alone()
   end
 
 --- ========== SIMCRAFT PRIORITY LIST ==========
 
+    -- Crimson Vial if hp low and not in group environment.
     -- Maintain Rupture (4+ Combo Points).
     -- Activate Vendetta when available.
     -- Activate Vanish on cooldown if using Subterfuge.
@@ -132,6 +132,7 @@
     -- Cast Envenom with 4-5 Combo Points (5-6 with Deeper Stratagem).
     -- Cast Fan of Knives when 2+ targets are within range to generate Combo Points.
     -- Cast Mutilate to generate Combo Points (do not use it if Blindside is available).
+    -- Stealth when out of combat.
 
 --- ========== CONVERTED ACTION LIST ==========
 
@@ -146,8 +147,15 @@
     Everyone.AoEToggleEnemiesUpdate()
 
     local use_cooldowns = HR.CDsON()
+    local use_aoe = HR.AoEON()
     local rupture_threshold = (4 + Player:ComboPoints() * 4) * 0.3
     local garrote_threshold = 5.4
+
+    -- Crimson Vial if hp low and not in group environment.
+    -- d53882c9-fb9f-4715-8c2c-f95d7574e509
+    if ShouldCrimsonVial() then
+        return "crimson_vial [d53882c9-fb9f-4715-8c2c-f95d7574e509]"
+    end
 
     -- Maintain Rupture (4+ Combo Points).
     -- 1d953ad0-1ce0-4959-a687-e6c101d7515f
@@ -165,6 +173,7 @@
     -- 2e63c2ff-7a3c-4bab-ace5-fdae339a4d80
     if S.Vendetta:IsReady()
       and (Target:IsInRange("Melee") or is_boss("target")) 
+      and is_boss("target")
       and Everyone.TargetIsValid()
       and use_cooldowns
       and (Target:FilteredTimeToDie(">",5) or is_boss("target")) then
@@ -213,9 +222,11 @@
     end 
 
     -- Cast Fan of Knives when 2+ targets are within range to generate Combo Points.
-    -- 548c6470-5cf6-43e1-8ccc-d706b624c353
+    -- 548c6470-5cf6-43e1-8ccc-w
     if S.FanofKnives:IsReady()
       and Everyone.TargetIsValid()
+      and (not ShouldCrimsonVial())
+      and use_aoe
       and Cache.EnemiesCount[10] >= 2 then
 
       return "fan_of_knives [548c6470-5cf6-43e1-8ccc-d706b624c353]"
@@ -225,10 +236,19 @@
     -- b389a045-b3f0-403e-9846-34c0ce0f6f35
     if S.Mutilate:IsReady()
       and (Target:IsInRange("Melee") or is_boss("target")) 
+      and (not ShouldCrimsonVial())
       and Everyone.TargetIsValid() then
 
       return "mutilate [b389a045-b3f0-403e-9846-34c0ce0f6f35]"
     end 
+
+    -- Stealth when out of combat.
+    -- 57689e7f-6865-48eb-acd6-48379520862a
+    if (S.Stealth:IsReady() or S.Stealth2:IsReady())
+      and not (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2)) then
+
+      return "stealth [57689e7f-6865-48eb-acd6-48379520862a]"
+    end
 
     return "pool"
   end
