@@ -1,13 +1,10 @@
 --- ========== TODO ==========
 
-  -- better / auto cd handling?
-  -- change is_boss ignore range checks to list of "big mobs" by name?
-  -- add back in toggles for AOE
-  -- interrupt at END of most casts -- exception lists for some?
+-- 20190225-1 - don't vanish when alone
 
 --- ========== HEADER ==========
   
-  local FILE_VERSION = 20181103-1
+  local FILE_VERSION = 20190225-1
 
   local addonName, addonTable = ...
   local HL = HeroLib
@@ -157,90 +154,109 @@
         return "crimson_vial [d53882c9-fb9f-4715-8c2c-f95d7574e509]"
     end
 
-    -- Maintain Rupture (4+ Combo Points).
-    -- 1d953ad0-1ce0-4959-a687-e6c101d7515f
-    if S.Rupture:IsReady()
-      and (Target:IsInRange("Melee") or is_boss("target")) 
-      and Everyone.TargetIsValid()
-      and Player:ComboPoints() >= 4
-      and Target:DebuffRefreshableP(S.Rupture, rupture_threshold) 
-      and (Target:FilteredTimeToDie(">",5) or is_boss("target")) then
+    -- STEALTH
 
-      return "rupture [1d953ad0-1ce0-4959-a687-e6c101d7515f]"
-    end 
+      -- garrote,cycle_targets=1,if=talent.subterfuge.enabled&refreshable&target.time_to_die-remains>2
+      -- aa8f1bfc-3e2e-4e45-ba75-795e0ac71039
+      if S.Garrote:IsReady()
+        and target_range("Melee")
+        and (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2))
+        and talent_enabled("Subterfuge")
+        and Target:DebuffRefreshableP(S.Garrote, garrote_threshold) 
+        and Target:FilteredTimeToDie(">",2) then
 
-    -- Activate Vendetta when available.
-    -- 2e63c2ff-7a3c-4bab-ace5-fdae339a4d80
-    if S.Vendetta:IsReady()
-      and (Target:IsInRange("Melee") or is_boss("target")) 
-      and is_boss("target")
-      and Everyone.TargetIsValid()
-      and use_cooldowns
-      and (Target:FilteredTimeToDie(">",5) or is_boss("target")) then
+        return "garrote [aa8f1bfc-3e2e-4e45-ba75-795e0ac71039]"
+      end 
 
-      return "vendetta [2e63c2ff-7a3c-4bab-ace5-fdae339a4d80]"
-    end 
+    -- CDS
 
-    -- Activate Vanish on cooldown if using Subterfuge.
-    -- 54c5e529-4834-4c10-9795-cee479a22f21
-    if S.Vanish:IsReady()
-      and Everyone.TargetIsValid()
-      and talent_enabled("subterfuge")
-      and is_boss("target") then
+      -- Activate Vendetta when available.
+      -- 2e63c2ff-7a3c-4bab-ace5-fdae339a4d80
+      if S.Vendetta:IsReady()
+        and use_cooldowns
+        and target_range("Melee")
+        and (not (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2)))
+        and Target:DebuffRemains(S.Rupture) > 0
+        and (Target:FilteredTimeToDie(">",5) or is_boss("target")) then
 
-      return "vanish [54c5e529-4834-4c10-9795-cee479a22f21]"
-    end
+        return "vendetta [2e63c2ff-7a3c-4bab-ace5-fdae339a4d80]"
+      end 
 
-    -- Maintain Garrote.
-    -- a2d550cf-6ad7-446a-8bf2-79b46de583a7
-    if S.Garrote:IsReady()
-      and (Target:IsInRange("Melee") or is_boss("target")) 
-      and Everyone.TargetIsValid()
-      and Target:DebuffRefreshableP(S.Garrote, garrote_threshold) 
-      and (Target:FilteredTimeToDie(">",5) or is_boss("target")) then
+      -- Activate Vanish on cooldown if using Subterfuge.
+      -- 54c5e529-4834-4c10-9795-cee479a22f21
+      if S.Vanish:IsReady()
+        and use_cooldowns
+        and (not alone())
+        and talent_enabled("Subterfuge")
+        and Everyone.TargetIsValid()
+        and (not (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2)))
+        and (Target:FilteredTimeToDie(">",5) or is_boss("target")) then
 
-      return "garrote [a2d550cf-6ad7-446a-8bf2-79b46de583a7]"
-    end 
+        return "vanish [54c5e529-4834-4c10-9795-cee479a22f21]"
+      end
 
-    -- Cast Toxic Blade when available, if you have chosen this talent.
-    -- b77caaae-1c0e-440a-85b2-68cc753779bc
-    if S.ToxicBlade:IsReady()
-      and (Target:IsInRange("Melee") or is_boss("target")) 
-      and Everyone.TargetIsValid() then
+      -- Cast Toxic Blade when available, if you have chosen this talent.
+      -- b77caaae-1c0e-440a-85b2-68cc753779bc
+      if S.ToxicBlade:IsReady()
+        and target_range("Melee")
+        and Target:DebuffRemains(S.Rupture) > 0 then
 
-      return "toxic_blade [b77caaae-1c0e-440a-85b2-68cc753779bc]"
-    end 
+        return "toxic_blade [b77caaae-1c0e-440a-85b2-68cc753779bc]"
+      end 
 
-    -- Cast Envenom with 4-5 Combo Points (5-6 with Deeper Stratagem).
-    -- 289b8e3a-974e-445e-b83f-8d6b49cb0dc4
-    if S.Envenom:IsReady()
-      and (Target:IsInRange("Melee") or is_boss("target")) 
-      and Everyone.TargetIsValid()
-      and Player:ComboPoints() >= 4 + binarize(talent_enabled("deeper stratagem")) then
+    -- DOT
 
-      return "envenom [289b8e3a-974e-445e-b83f-8d6b49cb0dc4]"
-    end 
+      -- Maintain Garrote.
+      -- a2d550cf-6ad7-446a-8bf2-79b46de583a7
+      if S.Garrote:IsReady()
+        and target_range("Melee")
+        and Target:DebuffRefreshableP(S.Garrote, garrote_threshold) 
+        and Target:FilteredTimeToDie(">",2) then
 
-    -- Cast Fan of Knives when 2+ targets are within range to generate Combo Points.
-    -- 548c6470-5cf6-43e1-8ccc-w
-    if S.FanofKnives:IsReady()
-      and Everyone.TargetIsValid()
-      and (not ShouldCrimsonVial())
-      and use_aoe
-      and Cache.EnemiesCount[10] >= 2 then
+        return "garrote [a2d550cf-6ad7-446a-8bf2-79b46de583a7]"
+      end 
+    
+      -- Maintain Rupture (4+ Combo Points).
+      -- 1d953ad0-1ce0-4959-a687-e6c101d7515f
+      if S.Rupture:IsReady()
+        and target_range("Melee")
+        and Player:ComboPoints() >= 4
+        and Target:DebuffRefreshableP(S.Rupture, rupture_threshold) 
+        and Target:FilteredTimeToDie(">",4) then
 
-      return "fan_of_knives [548c6470-5cf6-43e1-8ccc-d706b624c353]"
-    end 
+        return "rupture [1d953ad0-1ce0-4959-a687-e6c101d7515f]"
+      end 
 
-    -- Cast Mutilate to generate Combo Points (do not use it if Blindside is available).
-    -- b389a045-b3f0-403e-9846-34c0ce0f6f35
-    if S.Mutilate:IsReady()
-      and (Target:IsInRange("Melee") or is_boss("target")) 
-      and (not ShouldCrimsonVial())
-      and Everyone.TargetIsValid() then
+    -- DIRECT
 
-      return "mutilate [b389a045-b3f0-403e-9846-34c0ce0f6f35]"
-    end 
+      -- Cast Envenom with 4-5 Combo Points (5-6 with Deeper Stratagem).
+      -- 289b8e3a-974e-445e-b83f-8d6b49cb0dc4
+      if S.Envenom:IsReady()
+        and target_range("Melee")
+        and Player:ComboPoints() >= 4 + binarize(talent_enabled("deeper stratagem")) then
+
+        return "envenom [289b8e3a-974e-445e-b83f-8d6b49cb0dc4]"
+      end 
+
+      -- Cast Fan of Knives when 2+ targets are within range to generate Combo Points.
+      -- 548c6470-5cf6-43e1-8ccc-w
+      if S.FanofKnives:IsReady()
+        and Everyone.TargetIsValid()
+        and (not ShouldCrimsonVial())
+        and use_aoe
+        and Cache.EnemiesCount[10] >= 2 then
+
+        return "fan_of_knives [548c6470-5cf6-43e1-8ccc-d706b624c353]"
+      end 
+
+      -- Cast Mutilate to generate Combo Points (do not use it if Blindside is available).
+      -- b389a045-b3f0-403e-9846-34c0ce0f6f35
+      if S.Mutilate:IsReady()
+        and target_range("Melee")
+        and (not ShouldCrimsonVial()) then
+
+        return "mutilate [b389a045-b3f0-403e-9846-34c0ce0f6f35]"
+      end 
 
     -- Stealth when out of combat.
     -- 57689e7f-6865-48eb-acd6-48379520862a
@@ -253,4 +269,25 @@
     return "pool"
   end
 
+  function target_range(distance)
+    return Everyone.TargetIsValid() and (Target:IsInRange(distance) or (is_boss("target") and Target:IsInRange(20)))
+  end
+
+  function enemy_count(range)
+    local num = Cache.EnemiesCount[range]
+    if num == nil then
+      num = WH_ENEMY_CACHE[range]
+    else
+      WH_ENEMY_CACHE[range] = num
+    end
+    if num == nil then
+      if target_range(range) then
+        num = 1
+      else
+        num = 0
+      end
+    end
+    --print(range.."//"..num)
+    return num
+  end
 --- ========== END OF FILE ==========

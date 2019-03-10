@@ -1,10 +1,12 @@
-local FILE_VERSION = 20180919-1
+local FILE_VERSION = 20190217-1
 
 WH_DO_INTERRUPT = true
 WH_DPS_AVERAGE_PERSON = 8000
 
 WH_INTERRUPT_TABLE = {}
 WH_INTERRUPT_TABLE["Normal Tank Dummy"] = "Uber Strike"
+
+WH_ENEMY_CACHE = {}
 
 -- FREEHOLD
     WH_INTERRUPT_TABLE["Irontide Bonesaw"] = "Healing Balm"
@@ -428,6 +430,22 @@ function has_enemy_target()
     if(UnitReaction("target","player") < 5 or UnitName("target"):find("Dummy")) then
         return true
     end
+end
+
+function strength()
+    local _, c = UnitStat("player",1)
+    return c
+end
+
+function current_speed(unit)
+    if(not UnitExists(unit)) then
+        return 0
+    end
+    if(UnitIsDeadOrGhost(unit)) then
+        return 0
+    end
+    local r = GetUnitSpeed(unit)
+    return r
 end
 
 function in_range_of(unit,spellName)

@@ -4,7 +4,7 @@ CoordMode, Pixel, Screen
 SetTimer, AutoPetBattle, 333
 
 F4::ToggleAutoPetBattles()
-F5::PixelCheck(1188,994)
+F5::PixelCheck(1211,995)
 F3::MountYell()
 
 ToggleAutoPetBattles()
@@ -38,7 +38,7 @@ AutoPetBattle:
     {
         _sendOK := true
         if DO_PIXEL_CHECK
-            _sendOK := PixelCheck(1188,994) == "0x10108A"
+            _sendOK := PixelCheck(1211,995) == "0x19198F"
         if _sendOK
             ControlSend, , a, World of Warcraft, , , 
     }

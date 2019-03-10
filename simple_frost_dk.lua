@@ -2,10 +2,11 @@
 
   -- change is_boss ignore range checks to list of "big mobs" by name?
   -- interrupt at END of most casts -- exception lists for some?
+  -- startattack in rotation 
 
 --- ========== HEADER ==========
   
-  local FILE_VERSION = 20181111-1
+  local FILE_VERSION = 20190205-2
 
   local addonName, addonTable = ...
   local HL = HeroLib
@@ -129,6 +130,7 @@
 -- x actions+=/frostwyrms_fury,if=variable.use_cooldowns&buff.pillar_of_frost.up&buff.pillar_of_frost.remains<=4
 -- * actions+=/empower_rune_weapon,if=variable.use_cooldowns&(target.time_to_die<20|(rune>=3&runic_power>=60))&cooldown.breath_of_sindragosa.up
 -- * actions+=/breath_of_sindragosa,if=variable.use_cooldowns&(target.time_to_die<cooldown.empower_rune_weapon.remains|buff.empower_rune_weapon.up)
+-- * actions+=/chains_of_ice,if=buff.cold_heart.stack>=20
 -- * actions+=/howling_blast,if=buff.rime.up
 -- * actions+=/obliterate,if=variable.bos_ticking&runic_power<=30
 -- * actions+=/frost_strike,if=!variable.bos_ticking&(runic_power>=110|(!variable.use_cooldowns&runic_power.deficit<=25))
@@ -174,8 +176,9 @@
     -- 2e7b5ff3-a86d-4864-9b88-a0ca1fe69882
     -- added extra code to handle CD variables
     if S.PillarOfFrost:IsCastable() 
-      and Everyone.TargetIsValid()
-      and (S.EmpowerRuneWeapon:CooldownDown() or not use_cooldowns) then
+      and target_range("Melee")
+      --and (S.EmpowerRuneWeapon:CooldownDown() or ((not use_cooldowns) and S.BreathofSindragosa:CooldownRemains() >= 15)) then
+      and (S.EmpowerRuneWeapon:CooldownDown() or (not use_cooldowns)) then
 
       return "pillar_of_frost [2e7b5ff3-a86d-4864-9b88-a0ca1fe69882]"
     end
@@ -198,7 +201,7 @@
       and use_cooldowns
       and S.BreathofSindragosa:CooldownRemains() == 0
       and ((is_boss("target") and Target:FilteredTimeToDie("<",20))
-        or (Player:Runes() >= 3 and Player:RunicPower() > 60)) then
+        or (Player:Rune() >= 3 and Player:RunicPower() > 60)) then
 
       return "empower_rune_weapon [b0a97ff0-e8b2-4715-a16e-7b2392933228]"
     end
@@ -214,6 +217,15 @@
 
       return "breath_of_sindragosa [fb3a9ecf-d010-4885-9f72-6f8db764e83b]"
     end
+
+    -- chains_of_ice,if=buff.cold_heart.stack>=20
+    -- 98cf8a0a-225e-4eb7-aa32-7636a1ce2a6f
+    if S.ChainsOfIce:IsReady(30) 
+      and Everyone.TargetIsValid()
+      and Player:BuffStack(S.ColdHeartBuff) >= 20 then
+
+      return "chains_of_ice [98cf8a0a-225e-4eb7-aa32-7636a1ce2a6f]"
+    end    
 
     -- howling_blast,if=buff.rime.up
     -- 8da88256-bedd-409b-87dc-5f27b05220fa
@@ -286,7 +298,7 @@
       and (Target:IsInRange("Melee") or is_boss("target")) 
       and Everyone.TargetIsValid()
       and bos_pooling
-      and (Player:Runes()>=3
+      and (Player:Rune()>=3
         or Player:RunicPowerDeficit() >= 25) then
 
       return "obliterate [b61f1384-669f-4f0c-b395-9da06f269468]"
@@ -327,4 +339,7 @@
     return "pool"
   end
 
+  function target_range(distance)
+    return Everyone.TargetIsValid() and (Target:IsInRange(distance) or (is_boss("target") and Target:IsInRange(20)))
+  end
 --- ========== END OF FILE ==========

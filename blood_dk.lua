@@ -6,9 +6,7 @@
   
 --- ========== HEADER ==========
 
-  local FILE_VERSION = 20180924-1
-
-  WH_POOLING_FREEZE = false
+  local FILE_VERSION = 20190218-1
 
   local addonName, addonTable = ...
   local HL = HeroLib
@@ -135,10 +133,10 @@
 
     -- Unit Update
     HL.GetEnemies("Melee")
-    HL.GetEnemies(8,true)
-    HL.GetEnemies(10,true)
-    HL.GetEnemies(20,true)
-    HL.GetEnemies(30,true)
+    HL.GetEnemies(8)
+    HL.GetEnemies(10)
+    HL.GetEnemies(20)
+    HL.GetEnemies(30)
     Everyone.AoEToggleEnemiesUpdate()
 
     -- vampiric_blood -- HEALING LOGIC
@@ -172,7 +170,7 @@
       -- 90024159-aa6f-41a8-a8cb-5123aee46958
       if HR.CDsON() 
         and S.DancingRuneWeapon:IsReady() 
-        and (Cache.EnemiesCount["Melee"] >= 3 or (is_boss("target") and Target:IsInRange(10))) -- ADDED LOGIC
+        and (enemy_count("Melee") >= 3 or (is_boss("target") and Target:IsInRange(20))) -- ADDED LOGIC
         and ((not talent_enabled("Blooddrinker")) 
           or (not S.Blooddrinker:CooldownUp())) then
         
@@ -183,8 +181,11 @@
       -- death_strike -- HEALING LOGIC
       -- e8c226f1-97ad-4f27-9849-82454ba6ae1e
       if S.DeathStrike:IsReady()
-        and (Target:IsInRange("Melee") or is_boss("target"))
-        and Player:HealthPercentage() < 85 and ((not WH_POOLING_FREEZE) or (talent_enabled("Bonestorm") and S.Bonestorm:CooldownRemains() > 5))  then
+        and target_range("Melee")
+        and Player:HealthPercentage() < 85 
+        and ((not talent_enabled("Bonestorm"))
+          or enemy_count("Melee") <= 1 
+          or S.Bonestorm:CooldownRemains() > 5)  then
 
         return "death_strike [e8c226f1-97ad-4f27-9849-82454ba6ae1e]"
       end
@@ -192,7 +193,7 @@
       -- death_strike,if=runic_power.deficit<=10
       -- 140c0716-6144-49b7-a5d5-65ddc00790eb
       if S.DeathStrike:IsReady()
-        and (Target:IsInRange("Melee") or is_boss("target")) 
+        and target_range("Melee")
         and Player:RunicPowerDeficit() <= 10 then
 
         return "death_strike [140c0716-6144-49b7-a5d5-65ddc00790eb]"
@@ -203,10 +204,10 @@
       -- b92a9739-6a4b-4268-9a68-f4aa79dff949
       if S.BloodBoil:IsReady() 
         and S.BloodBoil:Charges() >= 2
-        and Cache.EnemiesCount[10] >= 1
-        and (Player:BuffStack(S.HemostasisBuff) <= (5 - Cache.EnemiesCount[10])
+        and enemy_count(10) >= 1
+        and (Player:BuffStack(S.HemostasisBuff) <= (5 - enemy_count(10))
           or (not Player:Buff(S.HemostasisBuff))
-          or Cache.EnemiesCount[10] > 2) then
+          or enemy_count(10) > 2) then
 
         return "blood_boil [b92a9739-6a4b-4268-9a68-f4aa79dff949]"
       end
@@ -224,7 +225,7 @@
       -- marrowrend,if=(buff.bone_shield.remains<=rune.time_to_3|buff.bone_shield.remains<=(gcd+cooldown.blooddrinker.ready*talent.blooddrinker.enabled*2)|buff.bone_shield.stack<3)&runic_power.deficit>=20
       -- 3c4db0ed-3b11-46f4-be6b-5404d29e94f7
       if S.Marrowrend:IsReady() 
-        and (Target:IsInRange("Melee") or is_boss("target"))
+        and target_range("Melee")
         and Player:RunicPowerDeficit() >= 20
         and (Player:BuffRemains(S.BoneShield) <= Player:RuneTimeToX(3)
           or Player:BuffRemains(S.BoneShield) <= (Player:GCD() + binarize(S.Blooddrinker:CooldownUp())*binarize(talent_enabled("Blooddrinker"))*2)
@@ -238,10 +239,10 @@
       -- b5ba1f3e-e83b-440d-ade0-8d6558779b0d
       if S.BloodBoil:IsReady() 
         and S.BloodBoil:Charges() >= 2
-        and Cache.EnemiesCount[10] >= 1
-        and (Player:BuffStack(S.HemostasisBuff) <= (5 - Cache.EnemiesCount[10])
+        and enemy_count(10) >= 1
+        and (Player:BuffStack(S.HemostasisBuff) <= (5 - enemy_count(10))
           or (not Player:Buff(S.HemostasisBuff))
-          or Cache.EnemiesCount[10] > 2) then
+          or enemy_count(10) > 2) then
 
         return "blood_boil [b5ba1f3e-e83b-440d-ade0-8d6558779b0d]"
       end
@@ -249,7 +250,7 @@
       -- marrowrend,if=buff.bone_shield.stack<5&talent.ossuary.enabled&runic_power.deficit>=15
       -- 44ae1d6e-c069-44d5-b267-e69541da9907
       if S.Marrowrend:IsReady() 
-        and (Target:IsInRange("Melee") or is_boss("target"))
+        and target_range("Melee")
         and (Player:BuffStack(S.BoneShield) < 5
           or (not Player:Buff(S.BoneShield)))
         and talent_enabled("Ossuary")
@@ -262,8 +263,9 @@
       -- f9cd611e-7452-47f4-8853-b31238756a25
       if S.Bonestorm:IsReady() 
         and HR.CDsON()
-        and (Target:IsInRange("Melee") or is_boss("target"))
+        and target_range("Melee")
         and Player:RunicPower() >= 100
+        and (enemy_count("Melee") >= 2 or is_boss("target"))
         and (not Player:Buff(S.DancingRuneWeaponBuff)) then
 
         return "bonestorm [f9cd611e-7452-47f4-8853-b31238756a25]"
@@ -272,8 +274,8 @@
       -- death_strike,if=runic_power.deficit<=(15+buff.dancing_rune_weapon.up*5+spell_targets.heart_strike*talent.heartbreaker.enabled*2)|target.time_to_die<10
       -- 1bf66980-ee7a-446f-998b-d7eb68267723
       if S.DeathStrike:IsReady()
-        and (Target:IsInRange("Melee") or is_boss("target"))
-        and (Player:RunicPowerDeficit() <= (15 + binarize(Player:Buff(S.DancingRuneWeaponBuff)) * 5 + Cache.EnemiesCount["Melee"] * binarize(talent_enabled("Heartbreaker")) * 2)
+        and target_range("Melee")
+        and (Player:RunicPowerDeficit() <= (15 + binarize(Player:Buff(S.DancingRuneWeaponBuff)) * 5 + enemy_count("Melee") * binarize(talent_enabled("Heartbreaker")) * 2)
           or Target:FilteredTimeToDie("<",10)) then
 
         return "death_strike [1bf66980-ee7a-446f-998b-d7eb68267723]"
@@ -282,7 +284,7 @@
       -- death_and_decay,if=spell_targets.death_and_decay>=3
       -- 1b63e20b-b4e1-4cf9-be40-7c33fba79b9b
       if S.DeathandDecay:IsReady()
-        and Cache.EnemiesCount[8] >= 3 then
+        and enemy_count("Melee") >= 3 then
 
         return "death_and_decay [1b63e20b-b4e1-4cf9-be40-7c33fba79b9b]"
       end
@@ -291,7 +293,7 @@
       -- 115c0d62-6550-465b-b550-4fe4d89f6716
       if talent_enabled("Rune Strike")
         and S.RuneStrike:IsReady()
-        and (Target:IsInRange("Melee") or is_boss("target"))
+        and target_range("Melee")
         and Player:RuneTimeToX(3) >= Player:GCD()
         and (S.RuneStrike:Charges() >= 2
           or Player:Buff(S.DancingRuneWeaponBuff)) then
@@ -302,7 +304,7 @@
       -- heart_strike,if=buff.dancing_rune_weapon.up|rune.time_to_4<gcd
       -- 4403976f-8c94-4185-a90d-8e65114297e9
       if S.HeartStrike:IsReady()
-        and (Target:IsInRange("Melee") or is_boss("target"))
+        and target_range("Melee")
         and (Player:Buff(S.DancingRuneWeaponBuff)
           or Player:RuneTimeToX(4) < Player:GCD()) then
 
@@ -312,7 +314,7 @@
       -- blood_boil,if=buff.dancing_rune_weapon.up
       -- fbd901af-8ff2-4a30-8fa3-0fa7a0f90a5c
       if S.BloodBoil:IsReady() 
-        and Cache.EnemiesCount[10] >= 1
+        and enemy_count(10) >= 1
         and Player:Buff(S.DancingRuneWeaponBuff) then
 
         return "blood_boil [fbd901af-8ff2-4a30-8fa3-0fa7a0f90a5c]"
@@ -323,7 +325,7 @@
       if S.DeathandDecay:IsReady()
         and (Player:Buff(S.CrimsonScourge)
           or talent_enabled("Rapid Decomposition")
-          or Cache.EnemiesCount[8] >= 2) then
+          or enemy_count("Melee") >= 2) then
 
         return "death_and_decay [4dc1c629-85c9-4e09-8fc2-ff37f4920458]"
       end
@@ -340,7 +342,7 @@
       -- blood_boil
       -- e9dd5ae9-f9c0-4f98-8e35-b1d6f0bb7389
       if S.BloodBoil:IsReady() 
-        and Cache.EnemiesCount[10] >= 1 then
+        and enemy_count(10) >= 1 then
 
         return "blood_boil [e9dd5ae9-f9c0-4f98-8e35-b1d6f0bb7389]"
       end
@@ -348,7 +350,7 @@
       -- heart_strike,if=rune.time_to_3<gcd|buff.bone_shield.stack>6
       -- 7ae6f6f1-da2a-4260-ad62-5b4637a4748b
       if S.HeartStrike:IsReady()
-        and (Target:IsInRange("Melee") or is_boss("target"))
+        and target_range("Melee")
         and (Player:RuneTimeToX(3) < Player:GCD()
           or Player:BuffStack(S.BoneShield) > 6) then
 
@@ -359,12 +361,34 @@
       -- a3c3943e-9fc5-4aa3-9a8c-a508106c1fe2
       if talent_enabled("Rune Strike")
         and S.RuneStrike:IsReady()
-        and (Target:IsInRange("Melee") or is_boss("target")) then
+        and target_range("Melee") then
 
         return "rune_strike [a3c3943e-9fc5-4aa3-9a8c-a508106c1fe2]"
       end
       
     end
+  end
+
+  function target_range(distance)
+    return Everyone.TargetIsValid() and (Target:IsInRange(distance) or (is_boss("target") and Target:IsInRange(20)))
+  end
+
+  function enemy_count(range)
+    local num = Cache.EnemiesCount[range]
+    if num == nil then
+      num = WH_ENEMY_CACHE[range]
+    else
+      WH_ENEMY_CACHE[range] = num
+    end
+    if num == nil then
+      if target_range(range) then
+        num = 1
+      else
+        num = 0
+      end
+    end
+    --print(range.."//"..num)
+    return num
   end
 
 --- ========== END OF FILE ==========
