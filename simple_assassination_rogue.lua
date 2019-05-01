@@ -1,10 +1,13 @@
---- ========== TODO ==========
+--- ========== STATUS ==========
 
 -- 20190225-1 - don't vanish when alone
+-- 20190323-1 - better timing for Envenoms / use Pmultipliers to not overwrite superiror DOTs / better stealth ability usage
+-- 20190324-1 - fix usage of Vanish
+-- 20190406-1 - hold vendetta until ambush is up
 
 --- ========== HEADER ==========
   
-  local FILE_VERSION = 20190225-1
+  local FILE_VERSION = 20190406-1
 
   local addonName, addonTable = ...
   local HL = HeroLib
@@ -55,6 +58,7 @@
         Rupture               = Spell(1943),
         Stealth               = Spell(1784),
         Stealth2              = Spell(115191), -- w/ Subterfuge Talent
+        SubterfugeBuff        = Spell(115192),
         Vanish                = Spell(1856),
         VanishBuff            = Spell(11327),
         Vendetta              = Spell(79140),
@@ -145,8 +149,19 @@
 
     local use_cooldowns = HR.CDsON()
     local use_aoe = HR.AoEON()
+    local use_filler = Player:ComboPointsDeficit() > 1 or Player:EnergyDeficit() <= 25 or (use_aoe and Cache.EnemiesCount[10] >= 2)
     local rupture_threshold = (4 + Player:ComboPoints() * 4) * 0.3
     local garrote_threshold = 5.4
+    local should_vanish = (S.Vanish:IsReady()
+            and Everyone.TargetIsValid()
+            and use_cooldowns
+            and ctime() > 3
+            and ((not alone()) or UnitName("target"):find("Dummy"))
+            and target_range("Melee")
+            and ((talent_enabled("Subterfuge") and S.Garrote:IsReady() and Target:DebuffRemains(S.Garrote) < 12 and Target:PMultiplier(S.Garrote) <= 1 and Player:ComboPointsDeficit() >= 1 + (2 * binarize(S.ShroudedSuffocation:AzeriteEnabled())))
+              or (talent_enabled("Nightstalker") and Player:ComboPoints() >= 4 and Target:DebuffRemains(S.Vendetta) > 0))
+            and (not (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2)))
+            and (Target:FilteredTimeToDie(">",5) or is_boss("target")))
 
     -- Crimson Vial if hp low and not in group environment.
     -- d53882c9-fb9f-4715-8c2c-f95d7574e509
@@ -154,16 +169,32 @@
         return "crimson_vial [d53882c9-fb9f-4715-8c2c-f95d7574e509]"
     end
 
+      -- Activate Vanish 
+      -- 54c5e529-4834-4c10-9795-cee479a22f21
+      if should_vanish then
+
+        return "vanish [54c5e529-4834-4c10-9795-cee479a22f21]"
+      end
+
     -- STEALTH
+      -- rupture,if=combo_points>=4&(talent.nightstalker.enabled|talent.subterfuge.enabled&(talent.exsanguinate.enabled&cooldown.exsanguinate.remains<=2|!ticking)&variable.single_target)&target.time_to_die-remains>6
+      -- fc21d7f9-a180-4ab7-b38f-fc74465f3b60
+      if S.Rupture:IsReady()
+        and target_range("Melee")
+        and (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2) or last_ability_used() == "vanish")
+        and (talent_enabled("Subterfuge") or talent_enabled("Nightstalker"))
+        and Player:ComboPoints() >= 4 then
+
+        return "rupture [fc21d7f9-a180-4ab7-b38f-fc74465f3b60]"
+      end 
 
       -- garrote,cycle_targets=1,if=talent.subterfuge.enabled&refreshable&target.time_to_die-remains>2
       -- aa8f1bfc-3e2e-4e45-ba75-795e0ac71039
       if S.Garrote:IsReady()
         and target_range("Melee")
-        and (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2))
-        and talent_enabled("Subterfuge")
-        and Target:DebuffRefreshableP(S.Garrote, garrote_threshold) 
-        and Target:FilteredTimeToDie(">",2) then
+        and ((Player:Buff(S.Stealth) or Player:Buff(S.Stealth2) or last_ability_used() == "vanish")
+          or (Player:ComboPointsDeficit() >= 1 and Player:BuffRemains(S.SubterfugeBuff) >= 1))
+        and talent_enabled("Subterfuge") then
 
         return "garrote [aa8f1bfc-3e2e-4e45-ba75-795e0ac71039]"
       end 
@@ -177,28 +208,17 @@
         and target_range("Melee")
         and (not (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2)))
         and Target:DebuffRemains(S.Rupture) > 0
+        and S.Vanish:CooldownRemains() <= 1
         and (Target:FilteredTimeToDie(">",5) or is_boss("target")) then
 
         return "vendetta [2e63c2ff-7a3c-4bab-ace5-fdae339a4d80]"
       end 
 
-      -- Activate Vanish on cooldown if using Subterfuge.
-      -- 54c5e529-4834-4c10-9795-cee479a22f21
-      if S.Vanish:IsReady()
-        and use_cooldowns
-        and (not alone())
-        and talent_enabled("Subterfuge")
-        and Everyone.TargetIsValid()
-        and (not (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2)))
-        and (Target:FilteredTimeToDie(">",5) or is_boss("target")) then
-
-        return "vanish [54c5e529-4834-4c10-9795-cee479a22f21]"
-      end
-
       -- Cast Toxic Blade when available, if you have chosen this talent.
       -- b77caaae-1c0e-440a-85b2-68cc753779bc
       if S.ToxicBlade:IsReady()
         and target_range("Melee")
+        and (not (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2)))
         and Target:DebuffRemains(S.Rupture) > 0 then
 
         return "toxic_blade [b77caaae-1c0e-440a-85b2-68cc753779bc]"
@@ -211,6 +231,8 @@
       if S.Garrote:IsReady()
         and target_range("Melee")
         and Target:DebuffRefreshableP(S.Garrote, garrote_threshold) 
+        and Player:ComboPointsDeficit() >= 1
+        and Target:PMultiplier(S.Garrote) <= 1
         and Target:FilteredTimeToDie(">",2) then
 
         return "garrote [a2d550cf-6ad7-446a-8bf2-79b46de583a7]"
@@ -222,6 +244,7 @@
         and target_range("Melee")
         and Player:ComboPoints() >= 4
         and Target:DebuffRefreshableP(S.Rupture, rupture_threshold) 
+        and Target:PMultiplier(S.Rupture) <= 1
         and Target:FilteredTimeToDie(">",4) then
 
         return "rupture [1d953ad0-1ce0-4959-a687-e6c101d7515f]"
@@ -233,7 +256,12 @@
       -- 289b8e3a-974e-445e-b83f-8d6b49cb0dc4
       if S.Envenom:IsReady()
         and target_range("Melee")
-        and Player:ComboPoints() >= 4 + binarize(talent_enabled("deeper stratagem")) then
+        and (not (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2) or should_vanish or last_ability_used() == "vanish"))
+        and Player:ComboPoints() >= 4 + binarize(talent_enabled("deeper stratagem"))
+        and (Target:DebuffRemains(S.Vendetta) > 0
+          or Target:DebuffRemains(S.ToxicBladeDebuff) > 0
+          or Player:EnergyDeficit() <= 25
+          or (use_aoe and Cache.EnemiesCount[10] >= 2)) then
 
         return "envenom [289b8e3a-974e-445e-b83f-8d6b49cb0dc4]"
       end 
@@ -241,10 +269,12 @@
       -- Cast Fan of Knives when 2+ targets are within range to generate Combo Points.
       -- 548c6470-5cf6-43e1-8ccc-w
       if S.FanofKnives:IsReady()
+        and (not (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2)))
         and Everyone.TargetIsValid()
         and (not ShouldCrimsonVial())
         and use_aoe
-        and Cache.EnemiesCount[10] >= 2 then
+        and Cache.EnemiesCount[10] >= 2
+        and use_filler then
 
         return "fan_of_knives [548c6470-5cf6-43e1-8ccc-d706b624c353]"
       end 
@@ -253,18 +283,19 @@
       -- b389a045-b3f0-403e-9846-34c0ce0f6f35
       if S.Mutilate:IsReady()
         and target_range("Melee")
-        and (not ShouldCrimsonVial()) then
+        and (not ShouldCrimsonVial())
+        and use_filler then
 
         return "mutilate [b389a045-b3f0-403e-9846-34c0ce0f6f35]"
       end 
 
-    -- Stealth when out of combat.
-    -- 57689e7f-6865-48eb-acd6-48379520862a
-    if (S.Stealth:IsReady() or S.Stealth2:IsReady())
-      and not (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2)) then
+      -- Stealth when out of combat.
+      -- 57689e7f-6865-48eb-acd6-48379520862a
+      if (S.Stealth:IsReady() or S.Stealth2:IsReady())
+        and not (Player:Buff(S.Stealth) or Player:Buff(S.Stealth2)) then
 
-      return "stealth [57689e7f-6865-48eb-acd6-48379520862a]"
-    end
+        return "stealth [57689e7f-6865-48eb-acd6-48379520862a]"
+      end
 
     return "pool"
   end

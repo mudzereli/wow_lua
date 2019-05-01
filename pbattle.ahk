@@ -38,7 +38,7 @@ AutoPetBattle:
     {
         _sendOK := true
         if DO_PIXEL_CHECK
-            _sendOK := PixelCheck(1211,995) == "0x19198F"
+            _sendOK := PixelCheck(1211,995) == "0x00108F"
         if _sendOK
             ControlSend, , a, World of Warcraft, , , 
     }

@@ -4,10 +4,11 @@
 -- 20190309-1 - Incorporate Blade Flurry Usage
 -- 20190309-2 - only use Blade Flurry if AOE is toggled on
 -- 20190310-1 - cache enemies within 8 yards so Blade Flurry will go off
+-- 20190323-1 - fix LUA error with blade_flurry_range
 
 --- ========== HEADER ==========
   
-  local FILE_VERSION = 20190310-1
+  local FILE_VERSION = 20190323-1
 
   local addonName, addonTable = ...
   local HL = HeroLib
@@ -261,8 +262,8 @@
     local garrote_threshold = 5.4
     local rtb_count = numRTB()
     local rtb_duration = durRTB()
-    local blade_flurry_range = S.AcrobaticStrikes:IsAvailable() and 9 or 6
-    local blade_flurry_sync = HR.AoEON() or Cache.EnemiesCount[blade_flurry_range] < 2 or Player:BuffP(S.BladeFlurry)
+    local blade_flurry_range = talent_enabled("Acrobatic Strikes") and 10 or "Melee"
+    local blade_flurry_sync = use_aoe or Cache.EnemiesCount[blade_flurry_range] < 2 or Player:BuffP(S.BladeFlurry)
 
     -- Crimson Vial if hp low and not in group environment.
     -- d53882c9-fb9f-4715-8c2c-f95d7574e509
